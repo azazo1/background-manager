@@ -1,8 +1,9 @@
+use migration::MigratorTrait;
 use sea_orm::{ActiveModelTrait, Database, DatabaseConnection};
 use tauri::async_runtime::RwLock;
 
 use crate::{
-    config::{config_dir, db_path, AppConfig},
+    config::{AppConfig, config_dir, db_path},
     task::Task,
 };
 
@@ -25,6 +26,13 @@ impl AppState {
                 Box::new(e),
             )
         })?;
+        migration::Migrator::up(&db, None).await.map_err(|e| {
+            crate::Error::with_source(
+                crate::ErrorKind::Db,
+                "failed to migrate database",
+                Box::new(e),
+            )
+        })?;
         Ok(db)
     }
 
@@ -42,6 +50,11 @@ impl AppState {
         am.save(&*self.db.read().await).await.map_err(|e| {
             crate::Error::with_source(crate::ErrorKind::Db, "failed to insert task", Box::new(e))
         })?;
+        Ok(())
+    }
+
+    pub(crate) async fn reconnect_db(&self) -> crate::Result<()> {
+        *self.db.write().await = Self::open_database().await?;
         Ok(())
     }
 }
