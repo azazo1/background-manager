@@ -1,0 +1,13 @@
+[package]
+name = "entity"
+publish = false
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "entity"
+path = "src/lib.rs"
+
+[dependencies]
+sea-orm = "2.0.0-rc"
+serde = { version = "1", features = ["derive"] }

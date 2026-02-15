@@ -1,9 +1,18 @@
 [package]
 name = "background-manager"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[workspace.package]
 version = "0.1.0"
 description = "A Tauri App"
-authors = ["you"]
-edition = "2021"
+authors = ["azazo1"]
+readme = "../README.md"
+edition = "2024"
+
+[workspace]
+members = [".", "migration", "entity"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -23,7 +32,11 @@ tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4.43", features = ["serde"] }
-sea-orm = { version = "2.0.0-rc", features = ["runtime-tokio", "sqlx-sqlite", "macros"] }
+sea-orm = { version = "2.0.0-rc", features = [
+    "runtime-tokio",
+    "sqlx-sqlite",
+    "macros",
+] }
 thiserror = "2.0.18"
 toml = "1.0.1"
 dirs-next = "2.0.0"
@@ -33,3 +46,5 @@ tracing-appender = "0.2.4"
 tokio = { version = "1.49.0", features = ["fs", "macros"] }
 url = "2.5.8"
 bon = "3.9.0"
+entity = { path = "entity" }
+migration = { path = "migration" }

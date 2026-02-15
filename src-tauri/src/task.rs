@@ -41,8 +41,8 @@ pub struct Task {
     pub enabled: bool,
 }
 
-impl From<crate::entity::tasks::Model> for Task {
-    fn from(m: crate::entity::tasks::Model) -> Self {
+impl From<entity::tasks::Model> for Task {
+    fn from(m: entity::tasks::Model) -> Self {
         // 解析触发器逻辑
         let trigger = match m.trigger_tag.as_str() {
             "Routine" => m
@@ -74,7 +74,7 @@ impl From<crate::entity::tasks::Model> for Task {
     }
 }
 
-impl From<Task> for crate::entity::tasks::ActiveModel {
+impl From<Task> for entity::tasks::ActiveModel {
     fn from(t: Task) -> Self {
         // 拆分 Trigger 为 tag 和 content
         let (tag, content) = match t.trigger {

@@ -38,7 +38,7 @@ impl AppState {
     }
 
     pub(crate) async fn save_task(&self, task: Task) -> crate::Result<()> {
-        let am: crate::entity::tasks::ActiveModel = task.into();
+        let am: entity::tasks::ActiveModel = task.into();
         am.save(&*self.db.read().await).await.map_err(|e| {
             crate::Error::with_source(crate::ErrorKind::Db, "failed to insert task", Box::new(e))
         })?;

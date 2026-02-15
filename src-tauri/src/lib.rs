@@ -6,7 +6,6 @@ use crate::{
 mod app_state;
 mod commands;
 mod config;
-mod entity;
 mod error;
 mod log;
 mod task;
