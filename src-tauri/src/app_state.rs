@@ -1,11 +1,14 @@
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::{ActiveModelTrait, Database, DatabaseConnection};
 use tauri::async_runtime::RwLock;
 
-use crate::config::{config_dir, db_path, AppConfig};
+use crate::{
+    config::{config_dir, db_path, AppConfig},
+    task::Task,
+};
 
 pub(crate) struct AppState {
-    pub(crate) config: RwLock<AppConfig>,
-    pub(crate) db: RwLock<DatabaseConnection>,
+    config: RwLock<AppConfig>,
+    db: RwLock<DatabaseConnection>,
 }
 
 impl AppState {
@@ -15,13 +18,14 @@ impl AppState {
         url.set_query(Some("mode=rwc"));
         let mut url = url.to_string();
         url.replace_range(0..4, "sqlite");
-        Database::connect(url).await.map_err(|e| {
+        let db = Database::connect(url).await.map_err(|e| {
             crate::Error::with_source(
                 crate::ErrorKind::Db,
                 "failed to connect to sqlite database",
                 Box::new(e),
             )
-        })
+        })?;
+        Ok(db)
     }
 
     pub(crate) async fn build() -> crate::Result<Self> {
@@ -31,5 +35,13 @@ impl AppState {
             config: RwLock::new(config),
             db: RwLock::new(db),
         })
+    }
+
+    pub(crate) async fn save_task(&self, task: Task) -> crate::Result<()> {
+        let am: crate::entity::tasks::ActiveModel = task.into();
+        am.save(&*self.db.read().await).await.map_err(|e| {
+            crate::Error::with_source(crate::ErrorKind::Db, "failed to insert task", Box::new(e))
+        })?;
+        Ok(())
     }
 }

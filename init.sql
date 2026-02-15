@@ -1,7 +1,7 @@
 -- 创建任务主表
 CREATE TABLE IF NOT EXISTS tasks (
     -- 使用 BIGINT 匹配 Rust 的 u64
-    id BIGINT PRIMARY KEY NOT NULL,
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 
     -- 基础信息
     name TEXT NOT NULL,

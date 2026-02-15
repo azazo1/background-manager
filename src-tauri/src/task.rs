@@ -1,7 +1,7 @@
 use std::{path::PathBuf, time::Duration};
 
 use chrono::{DateTime, FixedOffset};
-use sea_orm::Set;
+use sea_orm::{NotSet, Set};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Default)]
@@ -20,17 +20,24 @@ pub enum Trigger {
     Instant(DateTime<FixedOffset>),
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, bon::Builder)]
 pub struct Task {
-    /// Task id, 不能重复.
-    pub id: u64,
+    /// Task id, 不能重复, 在数据库中自动递增.
+    pub id: Option<i32>,
+    #[builder(into)]
     pub name: String,
+    #[builder(into)]
     pub program: PathBuf,
+    #[builder(into, default)]
     pub args: Vec<String>,
+    #[builder(into)]
     pub stdin: Option<PathBuf>,
+    #[builder(into)]
     pub stdout: Option<PathBuf>,
+    #[builder(into)]
     pub stderr: Option<PathBuf>,
     pub trigger: Trigger,
+    #[builder(default = true)]
     pub enabled: bool,
 }
 
@@ -53,7 +60,7 @@ impl From<crate::entity::tasks::Model> for Task {
         .unwrap_or(Trigger::Manual);
 
         Task {
-            id: m.id as u64,
+            id: Some(m.id),
             name: m.name,
             program: PathBuf::from(m.program),
             // 将 JSON 字符串解析回 Vec<String>
@@ -79,7 +86,10 @@ impl From<Task> for crate::entity::tasks::ActiveModel {
         };
 
         Self {
-            id: Set(t.id as i64),
+            id: match t.id {
+                Some(id) => Set(id),
+                None => NotSet, // 数据库会自动递增生成 ID
+            },
             name: Set(t.name),
             program: Set(t.program.to_string_lossy().into_owned()),
             // 将 Vec<String> 序列化为 JSON 字符串

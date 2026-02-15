@@ -84,7 +84,7 @@ impl AppConfig {
         if self.file.as_os_str().is_empty() {
             return Err(crate::Error::new(
                 crate::ErrorKind::Io,
-                format!("invalid saving file path: [empty]"),
+                "invalid saving file path: [empty]",
             ));
         }
         let content = toml::to_string_pretty(self).map_err(|e| {
