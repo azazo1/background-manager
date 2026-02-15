@@ -23,7 +23,7 @@ pub enum Trigger {
 #[derive(Deserialize, Serialize, bon::Builder)]
 pub struct Task {
     /// Task id, 不能重复, 在数据库中自动递增.
-    pub id: Option<i32>,
+    pub id: Option<i64>,
     #[builder(into)]
     pub name: String,
     #[builder(into)]
