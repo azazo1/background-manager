@@ -3,8 +3,10 @@ default: dev
 sea-orm-generate:
     sea-orm-cli generate entity --database-url sqlite://./data.db -o src-tauri/entity/src/ --verbose --lib --with-serde both
 
-sea-orm-migrate:
-    sea-orm-cli migrate init -d src-tauri/migration
+# sea-orm-migrate:
+#     sea-orm-cli migrate init -d src-tauri/migration
+# sea-orm-migrate-create-table:
+#     sea-orm-cli migrate generate create_table
 
 create-db:
     rm data.db
