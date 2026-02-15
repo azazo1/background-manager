@@ -10,7 +10,7 @@ use crate::utils::EnsureDirExists;
 pub(crate) fn data_dir() -> crate::Result<PathBuf> {
     dirs_next::data_dir()
         .ok_or_else(|| {
-            crate::Error::new(
+            crate::Error::with_message(
                 crate::ErrorKind::DirUnknown,
                 "can't determine data directory",
             )
@@ -30,7 +30,7 @@ pub(crate) fn log_dir() -> crate::Result<PathBuf> {
 pub(crate) fn config_dir() -> crate::Result<PathBuf> {
     dirs_next::config_dir()
         .ok_or_else(|| {
-            crate::Error::new(
+            crate::Error::with_message(
                 crate::ErrorKind::DirUnknown,
                 "can't determine config directory",
             )
@@ -82,7 +82,7 @@ impl AppConfig {
 
     pub(crate) async fn save(&self) -> crate::Result<()> {
         if self.file.as_os_str().is_empty() {
-            return Err(crate::Error::new(
+            return Err(crate::Error::with_message(
                 crate::ErrorKind::Io,
                 "invalid saving file path: [empty]",
             ));
