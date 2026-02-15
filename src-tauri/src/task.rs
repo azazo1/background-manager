@@ -1,6 +1,7 @@
 use std::{path::PathBuf, time::Duration};
 
 use chrono::{DateTime, FixedOffset};
+use sea_orm::Set;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Default)]
@@ -31,4 +32,64 @@ pub struct Task {
     pub stderr: Option<PathBuf>,
     pub trigger: Trigger,
     pub enabled: bool,
+}
+
+impl From<crate::entity::tasks::Model> for Task {
+    fn from(m: crate::entity::tasks::Model) -> Self {
+        // 解析触发器逻辑
+        let trigger = match m.trigger_tag.as_str() {
+            "Routine" => m
+                .trigger_content
+                .and_then(|c| serde_json::from_str(&c).ok())
+                .map(Trigger::Routine),
+            "Instant" => m
+                .trigger_content
+                .and_then(|c| serde_json::from_str(&c).ok())
+                .map(Trigger::Instant),
+            "Startup" => Some(Trigger::Startup),
+            "KeepAlive" => Some(Trigger::KeepAlive),
+            _ => Some(Trigger::Manual),
+        }
+        .unwrap_or(Trigger::Manual);
+
+        Task {
+            id: m.id as u64,
+            name: m.name,
+            program: PathBuf::from(m.program),
+            // 将 JSON 字符串解析回 Vec<String>
+            args: serde_json::from_str(&m.args).unwrap_or_default(),
+            stdin: m.stdin.map(PathBuf::from),
+            stdout: m.stdout.map(PathBuf::from),
+            stderr: m.stderr.map(PathBuf::from),
+            trigger,
+            enabled: m.enabled,
+        }
+    }
+}
+
+impl From<Task> for crate::entity::tasks::ActiveModel {
+    fn from(t: Task) -> Self {
+        // 拆分 Trigger 为 tag 和 content
+        let (tag, content) = match t.trigger {
+            Trigger::Routine(d) => ("Routine", Some(serde_json::to_string(&d).unwrap())),
+            Trigger::Instant(i) => ("Instant", Some(serde_json::to_string(&i).unwrap())),
+            Trigger::Startup => ("Startup", None),
+            Trigger::KeepAlive => ("KeepAlive", None),
+            Trigger::Manual => ("Manual", None),
+        };
+
+        Self {
+            id: Set(t.id as i64),
+            name: Set(t.name),
+            program: Set(t.program.to_string_lossy().into_owned()),
+            // 将 Vec<String> 序列化为 JSON 字符串
+            args: Set(serde_json::to_string(&t.args).unwrap_or_else(|_| "[]".to_string())),
+            stdin: Set(t.stdin.map(|p| p.to_string_lossy().into_owned())),
+            stdout: Set(t.stdout.map(|p| p.to_string_lossy().into_owned())),
+            stderr: Set(t.stderr.map(|p| p.to_string_lossy().into_owned())),
+            enabled: Set(t.enabled),
+            trigger_tag: Set(tag.to_string()),
+            trigger_content: Set(content),
+        }
+    }
 }
