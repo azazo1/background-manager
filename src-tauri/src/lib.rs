@@ -1,18 +1,15 @@
-use crate::{
-    app_state::AppState,
-    task::{Task, Trigger},
-};
+use crate::app_state::AppState;
 
 mod app_state;
 mod commands;
 mod config;
 mod error;
 mod log;
+mod schedule;
 mod task;
 mod utils;
 
 use error::{Error, ErrorKind, Result};
-use tauri::Manager;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

@@ -38,11 +38,13 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Tasks::TriggerTag).string().not_null())
                     .col(ColumnDef::new(Tasks::TriggerContent).string())
+                    .col(ColumnDef::new(Tasks::LastExitCode).integer())
+                    .col(ColumnDef::new(Tasks::LastRunAt).string()) // SQLite 中 TEXT 对应 .string()
                     .to_owned(),
             )
             .await?;
 
-        // 2. 创建索引：idx_tasks_enabled
+        // 2. 创建索引: idx_tasks_enabled
         manager
             .create_index(
                 Index::create()
@@ -54,7 +56,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        // 3. 创建索引：idx_tasks_trigger_tag
+        // 3. 创建索引: idx_tasks_trigger_tag
         manager
             .create_index(
                 Index::create()
@@ -70,14 +72,14 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        // 撤销迁移时删除表（索引会随表自动删除）
+        // 撤销迁移：直接删除表（索引会随之自动删除）
         manager
             .drop_table(Table::drop().table(Tasks::Table).to_owned())
             .await
     }
 }
 
-/// 定义表名和列名的标识符
+/// 使用枚举定义标识符，避免硬编码字符串
 #[derive(DeriveIden)]
 enum Tasks {
     Table,
@@ -91,4 +93,6 @@ enum Tasks {
     Enabled,
     TriggerTag,
     TriggerContent,
+    LastExitCode,
+    LastRunAt,
 }

@@ -25,6 +25,9 @@ pub struct Model {
     pub trigger_tag: String,
     #[sea_orm(column_type = "Text", nullable)]
     pub trigger_content: Option<String>,
+    pub last_exit_code: Option<i64>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub last_run_at: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -6,10 +6,12 @@ pub enum ErrorKind {
     Db,
     #[error("io error")]
     Io,
-    #[error("toml deserialzing error")]
+    #[error("toml deserializing error")]
     TomlDer,
     #[error("toml serializing error")]
     TomlSer,
+    #[error("json serializing error")]
+    JsonSer,
 }
 
 #[derive(thiserror::Error, Debug)]

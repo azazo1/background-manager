@@ -1,6 +1,6 @@
 use migration::MigratorTrait;
 use sea_orm::{Database, DatabaseConnection};
-use tauri::async_runtime::RwLock;
+use tokio::sync::{RwLock, RwLockReadGuard};
 use tracing::warn;
 
 use crate::config::{AppConfig, config_dir, db_path};
@@ -50,5 +50,9 @@ impl AppState {
         };
         *db = Self::open_database().await?;
         Ok(())
+    }
+
+    pub(crate) async fn db(&self) -> RwLockReadGuard<'_, DatabaseConnection> {
+        self.db.read().await
     }
 }

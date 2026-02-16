@@ -26,7 +26,11 @@ CREATE TABLE IF NOT EXISTS tasks (
     -- Routine 存: {"secs": 3600, "nanos": 0}
     -- Instant 存: "2026-02-15T23:00:00+08:00"
     -- Startup/Manual 存: NULL
-    trigger_content TEXT
+    trigger_content TEXT,
+
+    -- 上一次执行状态
+    last_exit_code INTEGER,
+    last_run_at TEXT
 );
 
 -- 为常用过滤字段创建索引，优化查询性能

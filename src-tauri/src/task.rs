@@ -1,7 +1,10 @@
 use std::{path::PathBuf, time::Duration};
 
 use chrono::{DateTime, FixedOffset};
-use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, NotSet, Set};
+use sea_orm::{
+    ActiveModelBehavior, ActiveModelTrait, ActiveValue::Unchanged, DatabaseConnection, EntityTrait,
+    NotSet, Set,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Default)]
@@ -39,6 +42,10 @@ pub struct Task {
     pub trigger: Trigger,
     #[builder(default = true)]
     pub enabled: bool,
+    #[builder(skip)]
+    pub last_exit_code: Option<i64>,
+    #[builder(skip)]
+    pub last_run_at: Option<DateTime<FixedOffset>>,
 }
 
 impl From<entity::tasks::Model> for Task {
@@ -70,6 +77,8 @@ impl From<entity::tasks::Model> for Task {
             stderr: m.stderr.map(PathBuf::from),
             trigger,
             enabled: m.enabled,
+            last_exit_code: m.last_exit_code,
+            last_run_at: m.last_run_at.and_then(|s| serde_json::from_str(&s).ok()),
         }
     }
 }
@@ -97,9 +106,11 @@ impl From<Task> for entity::tasks::ActiveModel {
             stdin: Set(t.stdin.map(|p| p.to_string_lossy().into_owned())),
             stdout: Set(t.stdout.map(|p| p.to_string_lossy().into_owned())),
             stderr: Set(t.stderr.map(|p| p.to_string_lossy().into_owned())),
-            enabled: Set(t.enabled),
+            enabled: NotSet,
             trigger_tag: Set(tag.to_string()),
             trigger_content: Set(content),
+            last_exit_code: NotSet,
+            last_run_at: NotSet,
         }
     }
 }
@@ -108,12 +119,25 @@ pub trait TaskDAO {
     async fn list_tasks(&self) -> crate::Result<Vec<Task>>;
     async fn get_task(&self, id: i64) -> crate::Result<Option<Task>>;
     /// 添加或者修改一个 task
+    ///
     /// - `task` 中的 id 为 None 的时候, 添加新的 Task.
     /// - `task` 中的 id 为 Some 的时候, 修改已有 Task 的内容, 如果指定 id 的 task 不存在, 那么返回错误.
+    ///
+    /// 其中的 `last_exit_code`, `last_run_at`, `enabled` 字段将被忽略.
     async fn save_task(&self, task: Task) -> crate::Result<i64>;
     /// 如果成功删除 `id`, 返回 `Ok(true)`,
     /// 如果指定 `id` 对应的 task 不存在, 那么返回 `Ok(false)`.
     async fn remove_task(&self, id: i64) -> crate::Result<bool>;
+    /// 启用/禁用某个 task.
+    async fn switch_task(&self, id: i64, enabled: bool) -> crate::Result<()>;
+    /// 更新任务的执行状态.
+    async fn update_task_exit_code(&self, id: i64, exit_code: i64) -> crate::Result<()>;
+    /// 更新任务的执行时间.
+    async fn update_task_run_at(
+        &self,
+        id: i64,
+        run_at: chrono::DateTime<FixedOffset>,
+    ) -> crate::Result<()>;
 }
 
 impl TaskDAO for DatabaseConnection {
@@ -158,5 +182,64 @@ impl TaskDAO for DatabaseConnection {
                 )
             })?;
         Ok(rst.rows_affected != 0)
+    }
+
+    async fn switch_task(&self, id: i64, enable: bool) -> crate::Result<()> {
+        let am = entity::tasks::ActiveModel {
+            id: Unchanged(id),
+            enabled: Set(enable),
+            ..Default::default()
+        };
+        am.update(self).await.map_err(|e| {
+            crate::Error::with_source(
+                crate::ErrorKind::Db,
+                format!("failed to switch task: {id}"),
+                Box::new(e),
+            )
+        })?;
+        Ok(())
+    }
+
+    async fn update_task_exit_code(&self, id: i64, exit_code: i64) -> crate::Result<()> {
+        let am = entity::tasks::ActiveModel {
+            id: Unchanged(id),
+            last_exit_code: Set(Some(exit_code)),
+            ..Default::default()
+        };
+        am.update(self).await.map_err(|e| {
+            crate::Error::with_source(
+                crate::ErrorKind::Db,
+                format!("failed to update exit code of task id: {id}"),
+                Box::new(e),
+            )
+        })?;
+        Ok(())
+    }
+
+    async fn update_task_run_at(
+        &self,
+        id: i64,
+        run_at: chrono::DateTime<FixedOffset>,
+    ) -> crate::Result<()> {
+        let run_at = serde_json::to_string(&run_at).map_err(|e| {
+            crate::Error::with_source(
+                crate::ErrorKind::JsonSer,
+                "failed to serialie run_at",
+                Box::new(e),
+            )
+        })?;
+        let am = entity::tasks::ActiveModel {
+            id: Unchanged(id),
+            last_run_at: Set(Some(run_at)),
+            ..Default::default()
+        };
+        am.update(self).await.map_err(|e| {
+            crate::Error::with_source(
+                crate::ErrorKind::Db,
+                format!("failed to update run_at of task id: {id}"),
+                Box::new(e),
+            )
+        })?;
+        Ok(())
     }
 }
