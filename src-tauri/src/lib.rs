@@ -24,23 +24,6 @@ pub async fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(AppState::build().await.unwrap())
-        .setup(|app| {
-            let handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                let state = handle.state::<AppState>();
-                state
-                    .save_task(
-                        Task::builder()
-                            .name("program1name")
-                            .program("program1")
-                            .trigger(Trigger::Startup)
-                            .build(),
-                    )
-                    .await
-                    .unwrap();
-            });
-            Ok(())
-        })
         .invoke_handler(tauri::generate_handler![list_tasks])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

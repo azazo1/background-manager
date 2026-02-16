@@ -1,7 +1,7 @@
 use std::{path::PathBuf, time::Duration};
 
 use chrono::{DateTime, FixedOffset};
-use sea_orm::{NotSet, Set};
+use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, NotSet, Set};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Default)]
@@ -101,5 +101,62 @@ impl From<Task> for entity::tasks::ActiveModel {
             trigger_tag: Set(tag.to_string()),
             trigger_content: Set(content),
         }
+    }
+}
+
+pub trait TaskDAO {
+    async fn list_tasks(&self) -> crate::Result<Vec<Task>>;
+    async fn get_task(&self, id: i64) -> crate::Result<Option<Task>>;
+    /// 添加或者修改一个 task
+    /// - `task` 中的 id 为 None 的时候, 添加新的 Task.
+    /// - `task` 中的 id 为 Some 的时候, 修改已有 Task 的内容, 如果指定 id 的 task 不存在, 那么返回错误.
+    async fn save_task(&self, task: Task) -> crate::Result<i64>;
+    /// 如果成功删除 `id`, 返回 `Ok(true)`,
+    /// 如果指定 `id` 对应的 task 不存在, 那么返回 `Ok(false)`.
+    async fn remove_task(&self, id: i64) -> crate::Result<bool>;
+}
+
+impl TaskDAO for DatabaseConnection {
+    async fn list_tasks(&self) -> crate::Result<Vec<Task>> {
+        let tasks = entity::tasks::Entity::find().all(self).await.map_err(|e| {
+            crate::Error::with_source(
+                crate::ErrorKind::Db,
+                "failed to list all tasks",
+                Box::new(e),
+            )
+        })?;
+        Ok(tasks.into_iter().map(|t| t.into()).collect())
+    }
+
+    async fn get_task(&self, id: i64) -> crate::Result<Option<Task>> {
+        let task = entity::tasks::Entity::find_by_id(id)
+            .one(self)
+            .await
+            .map_err(|e| {
+                crate::Error::with_source(crate::ErrorKind::Db, "failed to get task", Box::new(e))
+            })?;
+        Ok(task.map(|t| t.into()))
+    }
+
+    async fn save_task(&self, task: Task) -> crate::Result<i64> {
+        let am: entity::tasks::ActiveModel = task.into();
+        let a = am.save(self).await.map_err(|e| {
+            crate::Error::with_source(crate::ErrorKind::Db, "failed to insert task", Box::new(e))
+        })?;
+        Ok(a.id.unwrap())
+    }
+
+    async fn remove_task(&self, id: i64) -> crate::Result<bool> {
+        let rst = entity::tasks::Entity::delete_by_id(id)
+            .exec(self)
+            .await
+            .map_err(|e| {
+                crate::Error::with_source(
+                    crate::ErrorKind::Db,
+                    "failed to remove task",
+                    Box::new(e),
+                )
+            })?;
+        Ok(rst.rows_affected != 0)
     }
 }

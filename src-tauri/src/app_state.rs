@@ -1,11 +1,9 @@
 use migration::MigratorTrait;
-use sea_orm::{ActiveModelTrait, Database, DatabaseConnection};
+use sea_orm::{Database, DatabaseConnection};
 use tauri::async_runtime::RwLock;
+use tracing::warn;
 
-use crate::{
-    config::{AppConfig, config_dir, db_path},
-    task::Task,
-};
+use crate::config::{AppConfig, config_dir, db_path};
 
 pub(crate) struct AppState {
     config: RwLock<AppConfig>,
@@ -45,16 +43,12 @@ impl AppState {
         })
     }
 
-    pub(crate) async fn save_task(&self, task: Task) -> crate::Result<()> {
-        let am: entity::tasks::ActiveModel = task.into();
-        am.save(&*self.db.read().await).await.map_err(|e| {
-            crate::Error::with_source(crate::ErrorKind::Db, "failed to insert task", Box::new(e))
-        })?;
-        Ok(())
-    }
-
     pub(crate) async fn reconnect_db(&self) -> crate::Result<()> {
-        *self.db.write().await = Self::open_database().await?;
+        let mut db = self.db.write().await;
+        if let Err(e) = db.close_by_ref().await {
+            warn!("failed to close database: {e:?}");
+        };
+        *db = Self::open_database().await?;
         Ok(())
     }
 }
