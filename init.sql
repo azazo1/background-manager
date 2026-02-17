@@ -19,13 +19,13 @@ CREATE TABLE IF NOT EXISTS tasks (
     enabled BOOLEAN NOT NULL DEFAULT 1,
 
     -- 触发器逻辑拆分
-    -- trigger_tag 存储枚举名: 'Routine', 'Startup', 'KeepAlive', 'Manual', 'Instant'
+    -- trigger_tag 存储枚举名: 'Routine', 'Startup', 'KeepAlive', 'Manual', 'Instant', 'UntilSucceed'
     trigger_tag TEXT NOT NULL,
 
     -- trigger_content 存储对应的数据 JSON
     -- Routine 存: {"secs": 3600, "nanos": 0}
     -- Instant 存: "2026-02-15T23:00:00+08:00"
-    -- Startup/Manual 存: NULL
+    -- Startup/Manual/... 存: NULL
     trigger_content TEXT,
 
     -- 上一次执行状态

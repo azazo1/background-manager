@@ -12,16 +12,17 @@ use serde::{Deserialize, Serialize};
 pub enum Trigger {
     /// 间隔指定时间触发一次.
     Routine(Duration),
-    /// 在应用开启时启动.
+    /// 在应用开启时启动一次.
     Startup,
     /// 保证进程活性, 在子进程退出之后重新启动, 随应用开启时自动启动.
-    KeepAlive,
+    KeepAlive, // todo 重启并失败过多次时自动停止.
     /// 手动启动.
     #[default]
     Manual,
-    /// 指定时间点启动.
+    /// 指定时间点后启动一次.
     Instant(DateTime<FixedOffset>),
-    // todo until succeed.
+    /// 应用开启时自动启动, 重复创建进程直到进程返回状态为 0.
+    UntilSucceed,
 }
 
 #[derive(Deserialize, Serialize, bon::Builder, Clone, Debug)]
@@ -63,6 +64,7 @@ impl From<entity::tasks::Model> for Task {
                 .map(Trigger::Instant),
             "Startup" => Some(Trigger::Startup),
             "KeepAlive" => Some(Trigger::KeepAlive),
+            "UntilSucceed" => Some(Trigger::UntilSucceed),
             _ => Some(Trigger::Manual),
         }
         .unwrap_or(Trigger::Manual);
@@ -93,6 +95,7 @@ impl From<Task> for entity::tasks::ActiveModel {
             Trigger::Startup => ("Startup", None),
             Trigger::KeepAlive => ("KeepAlive", None),
             Trigger::Manual => ("Manual", None),
+            Trigger::UntilSucceed => ("UntilSucceed", None),
         };
 
         Self {

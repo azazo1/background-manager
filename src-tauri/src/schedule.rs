@@ -1,12 +1,13 @@
 //! 调度任务的执行.
 
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, time::Duration};
 
 use sea_orm::DatabaseConnection;
 use tokio::{
     process::{self, Child},
     sync::{mpsc, oneshot},
     task::JoinHandle,
+    time::Instant,
 };
 use tracing::warn;
 
@@ -140,19 +141,37 @@ impl Scheduler {
         let mut child: Option<Child> = None;
 
         // 初始化触发器
-        // 注意：如果是 Routine，我们需要一个可重置的 sleep
-        let mut interval = if let Trigger::Routine(d) = task.trigger {
-            Some(tokio::time::interval(d))
-        } else {
-            None
-        };
-        if let Trigger::Startup = task.trigger {
-            Self::run_and_record(&mut child, &db, &task).await;
+        let mut interval = None;
+        let mut instant = None;
+        match task.trigger {
+            Trigger::Routine(d) => {
+                interval = Some(tokio::time::interval(d));
+            }
+            Trigger::Startup => {
+                Self::run_and_record(&mut child, &db, &task).await;
+            }
+            Trigger::KeepAlive => {
+                Self::run_and_record(&mut child, &db, &task).await;
+            }
+            Trigger::Manual => (),
+            Trigger::Instant(date_time) => {
+                if task.last_run_at.is_none_or(|l| l < date_time) {
+                    let delta = date_time.signed_duration_since(chrono::Local::now());
+                    if let Some(target) =
+                        Instant::now().checked_add(Duration::from_secs(delta.num_seconds() as u64))
+                    {
+                        instant = Some(target);
+                    }
+                }
+            }
+            Trigger::UntilSucceed => {
+                Self::run_and_record(&mut child, &db, &task).await;
+            }
         }
 
         loop {
             tokio::select! {
-                // 1. 监听外部控制消息
+                // 监听外部控制消息
                 Some(msg) = rx.recv() => {
                     match msg {
                         GuardMsg::Reconnect(new_conn) => db = new_conn,
@@ -175,18 +194,30 @@ impl Scheduler {
                     }
                 }
 
-                // 2. 处理定时触发 (Routine)
+                // 处理定时触发 (Routine)
                 Some(_) = async {
                     if let Some(int) = &mut interval {
                         Some(int.tick().await)
                     } else {
                         None
                     }
-                }, if task.enabled && matches!(task.trigger, Trigger::Routine(_)) && child.is_none() => {
+                } => {
                     Self::run_and_record(&mut child, &db, &task).await;
                 }
 
-                // 3. 监控进程退出 (KeepAlive 逻辑)
+                // 指定时间触发 (Instant)
+                Some(_) = async {
+                    if let Some(instant) = &instant {
+                        tokio::time::sleep_until(*instant).await;
+                        Some(())
+                    } else {
+                        None
+                    }
+                } => {
+                    Self::run_and_record(&mut child, &db, &task).await;
+                }
+
+                // 监控进程退出 (KeepAlive/UntilSucceed 逻辑)
                 // 注意：只有当 child 存在时才激活此分支
                 status = async {
                     if let Some(c) = &mut child {
@@ -202,6 +233,8 @@ impl Scheduler {
 
                         // 如果是 KeepAlive，立即重新启动
                         if let Trigger::KeepAlive = task.trigger {
+                            Self::run_and_record(&mut child, &db, &task).await;
+                        } else if let Trigger::UntilSucceed = task.trigger && code != 0 {
                             Self::run_and_record(&mut child, &db, &task).await;
                         }
                     }
