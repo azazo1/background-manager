@@ -1,4 +1,5 @@
 use tauri::State;
+use tauri_plugin_dialog::DialogExt;
 
 use crate::{
     app_state::AppState,
@@ -83,4 +84,14 @@ pub(crate) async fn is_task_running(
         .is_running(id)
         .await
         .map_err(|e| format!("{e}"))
+}
+
+#[tauri::command]
+pub(crate) async fn pick_file(window: tauri::Window) -> Result<Option<String>, String> {
+    let file = window.dialog().file().blocking_pick_file();
+    Ok(file
+        .as_ref()
+        .and_then(|f| f.as_path())
+        .and_then(|f| f.to_str())
+        .map(str::to_string))
 }

@@ -1,50 +1,199 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import { useState, useEffect } from "react";
+import { AlertCircle, Globe } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import "./App.css";
+import { TaskList } from "./components/TaskList";
+import { TaskEditDialog } from "./components/TaskEditDialog";
+import { Button } from "./components/ui/button";
+import { useTaskList, useTaskActions } from "./lib/hooks";
+import type { Task } from "./types/task";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const { t, i18n } = useTranslation();
+  const { tasks, loading, error, fetchTasks, setTasks } = useTaskList();
+  const { saveTask, removeTask, switchTask, manualRunTask } = useTaskActions();
+  const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [taskRunStatus, setTaskRunStatus] = useState<Record<number, boolean>>({});
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  // Update task statuses periodically
+  useEffect(() => {
+    const updateStatuses = async () => {
+      const statuses: Record<number, boolean> = {};
+      for (const task of tasks) {
+        if (task.id) {
+          try {
+            const isRunning = await import("./lib/api").then((m) =>
+              m.taskApi.isTaskRunning(task.id!)
+            );
+            statuses[task.id] = isRunning;
+          } catch {
+            statuses[task.id] = false;
+          }
+        }
+      }
+      setTaskRunStatus(statuses);
+    };
+
+    const interval = setInterval(updateStatuses, 2000);
+    updateStatuses();
+    return () => clearInterval(interval);
+  }, [tasks]);
+
+  const handleEditTask = (task: Task) => {
+    setSelectedTask(task);
+    setDialogOpen(true);
+  };
+
+  const handleCreateTask = () => {
+    setSelectedTask(undefined);
+    setDialogOpen(true);
+  };
+
+  const handleSaveTask = async (task: Task) => {
+    try {
+      await saveTask(task);
+      setDialogOpen(false);
+      setSelectedTask(undefined);
+      await fetchTasks();
+      toast.success(t("toast.saveSuccess"));
+    } catch (err) {
+      console.error("Failed to save task:", err);
+      toast.error(t("toast.saveFailed"), {
+        description: err instanceof Error ? err.message : t("toast.unknownError"),
+      });
+    }
+  };
+
+  const handleDeleteTask = async (id: number) => {
+    try {
+      await removeTask(id);
+      await fetchTasks();
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+    }
+  };
+
+  const handleRunTask = async (id: number) => {
+    try {
+      await manualRunTask(id);
+    } catch (err) {
+      console.error("Failed to run task:", err);
+    }
+  };
+
+  const handleToggleTask = async (id: number, enabled: boolean) => {
+    try {
+      await switchTask(id, enabled);
+      setTasks(
+        tasks.map((t) =>
+          t.id === id ? { ...t, enabled } : t
+        )
+      );
+    } catch (err) {
+      console.error("Failed to toggle task:", err);
+    }
+  };
+
+  const handleLanguageChange = (lng: string) => {
+    i18n.changeLanguage(lng);
+    localStorage.setItem("language", lng);
+  };
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">
+                {t("header.title")}
+              </h1>
+              <p className="text-sm text-slate-600 mt-1">
+                {t("header.subtitle")}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Language Selector */}
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={i18n.language === "en" ? "default" : "outline"}
+                  onClick={() => handleLanguageChange("en")}
+                  className="text-xs"
+                >
+                  <Globe className="h-3 w-3 mr-1" />
+                  English
+                </Button>
+                <Button
+                  size="sm"
+                  variant={i18n.language === "zh" ? "default" : "outline"}
+                  onClick={() => handleLanguageChange("zh")}
+                  className="text-xs"
+                >
+                  <Globe className="h-3 w-3 mr-1" />
+                  中文
+                </Button>
+              </div>
+              <Button onClick={handleCreateTask} size="lg">
+                {t("button.newTask")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
 
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-6 py-8">
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-semibold text-red-900">{t("error.title")}</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => fetchTasks()}
+                className="mt-2"
+              >
+                {t("button.retry")}
+              </Button>
+            </div>
+          </div>
+        )}
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="space-y-2 text-center">
+              <div className="h-8 w-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mx-auto" />
+              <p className="text-slate-600">{t("status.loading")}</p>
+            </div>
+          </div>
+        ) : (
+          <TaskList
+            tasks={tasks}
+            onEdit={handleEditTask}
+            onDelete={handleDeleteTask}
+            onRun={handleRunTask}
+            onToggleEnabled={handleToggleTask}
+            isRunning={taskRunStatus}
+          />
+        )}
+      </main>
+
+      {/* Task Edit Dialog */}
+      <TaskEditDialog
+        open={dialogOpen}
+        task={selectedTask}
+        onOpenChange={setDialogOpen}
+        onSave={handleSaveTask}
+      />
+    </div>
   );
 }
 

@@ -100,19 +100,24 @@ impl Scheduler {
                 }
                 Msg::SaveTask(task) => {
                     // 不管是添加还是修改 task, 都删除原来的 guard, 创建新的 guard.
-                    if let Some(id) = task.id {
-                        if let Err(e) = db.save_task(task.clone()).await {
-                            warn!("failed to save task {id}: {e:?}");
+                    let id = match db.save_task(task.clone()).await {
+                        Ok(id) => id,
+                        Err(e) => {
+                            if let Some(id) = task.id {
+                                warn!("failed to save task {id}: {e:?}");
+                            } else {
+                                warn!("failed to create task: {e:?}");
+                            }
                             continue;
                         }
-                        if let Some(guard_tx) = guards.get(&id) {
-                            guard_tx.send(GuardMsg::RemoveTask).await.ok();
-                        }
-                        let (guard_tx, guard_rx) = mpsc::channel(10);
-                        guards.insert(id, guard_tx);
-                        let db = db.clone();
-                        tokio::spawn(async move { Self::task_guard(db, task, guard_rx).await });
+                    };
+                    if let Some(guard_tx) = guards.get(&id) {
+                        guard_tx.send(GuardMsg::RemoveTask).await.ok();
                     }
+                    let (guard_tx, guard_rx) = mpsc::channel(10);
+                    guards.insert(id, guard_tx);
+                    let db = db.clone();
+                    tokio::spawn(async move { Self::task_guard(db, task, guard_rx).await });
                 }
                 Msg::SwitchTask(id, enabled) => {
                     if let Some(guard_tx) = guards.get(&id) {

@@ -1,0 +1,88 @@
+{
+  "header": {
+    "title": "Background Task Manager",
+    "subtitle": "Manage and monitor background processes"
+  },
+  "button": {
+    "newTask": "+ New Task",
+    "create": "Create Task",
+    "update": "Update Task",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "delete": "Delete",
+    "edit": "Edit",
+    "run": "Run",
+    "browse": "Browse",
+    "addArgument": "Add Argument",
+    "retry": "Retry"
+  },
+  "dialog": {
+    "createTitle": "Create New Task",
+    "editTitle": "Edit Task",
+    "createDesc": "Configure a new background task",
+    "editDesc": "Modify task settings (enabled status changed from the task list)"
+  },
+  "form": {
+    "taskName": "Task Name",
+    "programPath": "Program Path",
+    "arguments": "Arguments",
+    "argumentPlaceholder": "Argument {{number}}",
+    "triggerMode": "Trigger Mode",
+    "fileRedirections": "File Redirections",
+    "standardInput": "Standard Input",
+    "standardOutput": "Standard Output",
+    "standardError": "Standard Error",
+    "intervalMs": "Interval (milliseconds)",
+    "intervalNote": "Runs every {{seconds}} seconds",
+    "scheduledTime": "Scheduled Time",
+    "noArguments": "No arguments yet",
+    "required": "*",
+    "requiredNote": "and program path are required"
+  },
+  "trigger": {
+    "manual": "Manual",
+    "startup": "On Startup",
+    "keepAlive": "Keep Alive",
+    "untilSucceed": "Until Succeed",
+    "routine": "Routine (Interval)",
+    "instant": "Instant (Scheduled)"
+  },
+  "task": {
+    "emptyTitle": "No tasks yet",
+    "emptySubtitle": "Create your first task to get started",
+    "running": "Running",
+    "exit": "Exit:",
+    "every": "Every {{time}}s",
+    "onceAt": "Once at {{time}}",
+    "last": "Last: {{time}}"
+  },
+  "error": {
+    "title": "Error",
+    "failedLoad": "Failed to load tasks",
+    "failedSave": "Failed to save task",
+    "failedDelete": "Failed to delete task",
+    "failedRun": "Failed to run task",
+    "failedToggle": "Failed to toggle task",
+    "confirmDelete": "Are you sure you want to delete this task?"
+  },
+  "status": {
+    "loading": "Loading tasks...",
+    "noArguments": "No arguments yet"
+  },
+  "validation": {
+    "required": "Required Fields",
+    "fillRequired": "Please fill in task name and program path"
+  },
+  "toast": {
+    "saveSuccess": "Task saved successfully",
+    "saveFailed": "Failed to save task",
+    "deleteSuccess": "Task deleted successfully",
+    "deleteFailed": "Failed to delete task",
+    "runSuccess": "Task started successfully",
+    "runFailed": "Failed to run task",
+    "toggleSuccess": "Task updated successfully",
+    "toggleFailed": "Failed to update task",
+    "unknownError": "Unknown error occurred"
+  }
+}

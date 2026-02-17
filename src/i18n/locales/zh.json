@@ -1,0 +1,88 @@
+{
+  "header": {
+    "title": "后台任务管理器",
+    "subtitle": "管理和监控后台进程"
+  },
+  "button": {
+    "newTask": "+ 新建任务",
+    "create": "创建任务",
+    "update": "更新任务",
+    "cancel": "取消",
+    "save": "保存",
+    "saving": "保存中...",
+    "delete": "删除",
+    "edit": "编辑",
+    "run": "运行",
+    "browse": "浏览",
+    "addArgument": "添加参数",
+    "retry": "重试"
+  },
+  "dialog": {
+    "createTitle": "创建新任务",
+    "editTitle": "编辑任务",
+    "createDesc": "配置新的后台任务",
+    "editDesc": "修改任务设置（启用状态从任务列表中更改）"
+  },
+  "form": {
+    "taskName": "任务名称",
+    "programPath": "程序路径",
+    "arguments": "参数列表",
+    "argumentPlaceholder": "参数 {{number}}",
+    "triggerMode": "触发模式",
+    "fileRedirections": "文件重定向",
+    "standardInput": "标准输入",
+    "standardOutput": "标准输出",
+    "standardError": "标准错误",
+    "intervalMs": "间隔（毫秒）",
+    "intervalNote": "每 {{seconds}} 秒运行一次",
+    "scheduledTime": "计划时间",
+    "noArguments": "暂无参数",
+    "required": "*",
+    "requiredNote": "和程序路径是必需的"
+  },
+  "trigger": {
+    "manual": "手动",
+    "startup": "启动时运行",
+    "keepAlive": "保持活跃",
+    "untilSucceed": "直到成功",
+    "routine": "定时重复",
+    "instant": "定时一次"
+  },
+  "task": {
+    "emptyTitle": "暂无任务",
+    "emptySubtitle": "创建第一个任务开始使用",
+    "running": "运行中",
+    "exit": "退出码:",
+    "every": "每 {{time}} 秒",
+    "onceAt": "于 {{time}} 执行一次",
+    "last": "最后: {{time}}"
+  },
+  "error": {
+    "title": "错误",
+    "failedLoad": "加载任务失败",
+    "failedSave": "保存任务失败",
+    "failedDelete": "删除任务失败",
+    "failedRun": "运行任务失败",
+    "failedToggle": "切换任务失败",
+    "confirmDelete": "您确定要删除此任务吗？"
+  },
+  "status": {
+    "loading": "加载任务中...",
+    "noArguments": "暂无参数"
+  },
+  "validation": {
+    "required": "必填字段",
+    "fillRequired": "请填写任务名称和程序路径"
+  },
+  "toast": {
+    "saveSuccess": "任务保存成功",
+    "saveFailed": "保存任务失败",
+    "deleteSuccess": "任务删除成功",
+    "deleteFailed": "删除任务失败",
+    "runSuccess": "任务启动成功",
+    "runFailed": "运行任务失败",
+    "toggleSuccess": "任务更新成功",
+    "toggleFailed": "更新任务失败",
+    "unknownError": "发生未知错误"
+  }
+}
