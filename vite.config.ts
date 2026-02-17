@@ -15,27 +15,6 @@ export default defineConfig(async () => ({
     },
   },
 
-  build: {
-    rollupOptions: {
-      output: {
-        assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split(".");
-          const ext = info[info.length - 1];
-          if (/png|jpe?g|gif|tiff|bmp|ico/i.test(ext)) {
-            return `assets/images/[name]-[hash][extname]`;
-          } else if (/woff|woff2|eot|ttf|otf/i.test(ext)) {
-            return `assets/fonts/[name]-[hash][extname]`;
-          } else if (ext === "css") {
-            return `assets/css/[name]-[hash][extname]`;
-          } else if (ext === "html") {
-            return `[name][extname]`;
-          }
-          return `assets/[name]-[hash][extname]`;
-        },
-      },
-    },
-  },
-
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors
