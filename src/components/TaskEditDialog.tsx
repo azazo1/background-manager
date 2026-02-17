@@ -299,14 +299,52 @@ export function TaskEditDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Manual">{t("trigger.manual")}</SelectItem>
-                <SelectItem value="Startup">{t("trigger.startup")}</SelectItem>
-                <SelectItem value="KeepAlive">{t("trigger.keepAlive")}</SelectItem>
-                <SelectItem value="UntilSucceed">{t("trigger.untilSucceed")}</SelectItem>
-                <SelectItem value="Routine">{t("trigger.routine")}</SelectItem>
-                <SelectItem value="Instant">{t("trigger.instant")}</SelectItem>
+                <SelectItem value="Manual">
+                  {t("trigger.manual")}
+                  <div className="text-xs text-slate-500 font-normal mt-0.5">
+                    {t("trigger.manualDesc")}
+                  </div>
+                </SelectItem>
+                <SelectItem value="Startup">
+                  {t("trigger.startup")}
+                  <div className="text-xs text-slate-500 font-normal mt-0.5">
+                    {t("trigger.startupDesc")}
+                  </div>
+                </SelectItem>
+                <SelectItem value="KeepAlive">
+                  {t("trigger.keepAlive")}
+                  <div className="text-xs text-slate-500 font-normal mt-0.5">
+                    {t("trigger.keepAliveDesc")}
+                  </div>
+                </SelectItem>
+                <SelectItem value="UntilSucceed">
+                  {t("trigger.untilSucceed")}
+                  <div className="text-xs text-slate-500 font-normal mt-0.5">
+                    {t("trigger.untilSucceedDesc")}
+                  </div>
+                </SelectItem>
+                <SelectItem value="Routine">
+                  {t("trigger.routine")}
+                  <div className="text-xs text-slate-500 font-normal mt-0.5">
+                    {t("trigger.routineDesc")}
+                  </div>
+                </SelectItem>
+                <SelectItem value="Instant">
+                  {t("trigger.instant")}
+                  <div className="text-xs text-slate-500 font-normal mt-0.5">
+                    {t("trigger.instantDesc")}
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-slate-500">
+              {triggerType === "Manual" && t("trigger.manualDesc")}
+              {triggerType === "Startup" && t("trigger.startupDesc")}
+              {triggerType === "KeepAlive" && t("trigger.keepAliveDesc")}
+              {triggerType === "UntilSucceed" && t("trigger.untilSucceedDesc")}
+              {triggerType === "Routine" && t("trigger.routineDesc")}
+              {triggerType === "Instant" && t("trigger.instantDesc")}
+            </p>
           </div>
 
           {/* Trigger-specific options */}

@@ -47,7 +47,13 @@
     "keepAlive": "保持活跃",
     "untilSucceed": "直到成功",
     "routine": "定时重复",
-    "instant": "定时一次"
+    "instant": "定时一次",
+    "manualDesc": "需要手动点击运行按钮来启动任务",
+    "startupDesc": "应用启动时自动运行一次",
+    "keepAliveDesc": "保证进程持续运行，退出后自动重启",
+    "untilSucceedDesc": "应用启动时运行，重复执行直到返回状态码为 0",
+    "routineDesc": "按指定时间间隔定期重复执行",
+    "instantDesc": "在指定的时间点运行一次"
   },
   "task": {
     "emptyTitle": "暂无任务",

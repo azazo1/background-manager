@@ -47,7 +47,13 @@
     "keepAlive": "Keep Alive",
     "untilSucceed": "Until Succeed",
     "routine": "Routine (Interval)",
-    "instant": "Instant (Scheduled)"
+    "instant": "Instant (Scheduled)",
+    "manualDesc": "Manually trigger the task by clicking the run button",
+    "startupDesc": "Run once when the application starts",
+    "keepAliveDesc": "Keep the process running, automatically restart after exit",
+    "untilSucceedDesc": "Run on startup, repeat until exit code is 0",
+    "routineDesc": "Run repeatedly at specified time intervals",
+    "instantDesc": "Run once at the specified time"
   },
   "task": {
     "emptyTitle": "No tasks yet",
