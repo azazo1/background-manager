@@ -237,6 +237,7 @@ export function TaskEditDialog({
                 {t("button.addArgument")}
               </Button>
             </div>
+            <p className="text-xs text-slate-500">{t("form.argumentsNote")}</p>
             {formData.args.length > 0 ? (
               <div className="space-y-2">
                 {formData.args.map((arg, index) => (

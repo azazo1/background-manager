@@ -27,6 +27,7 @@
     "taskName": "Task Name",
     "programPath": "Program Path",
     "arguments": "Arguments",
+    "argumentsNote": "Arguments with spaces are not split automatically",
     "argumentPlaceholder": "Argument {{number}}",
     "triggerMode": "Trigger Mode",
     "fileRedirections": "File Redirections",

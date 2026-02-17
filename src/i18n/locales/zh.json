@@ -27,6 +27,7 @@
     "taskName": "任务名称",
     "programPath": "程序路径",
     "arguments": "参数列表",
+    "argumentsNote": "包含空格的参数不会自动拆分",
     "argumentPlaceholder": "参数 {{number}}",
     "triggerMode": "触发模式",
     "fileRedirections": "文件重定向",
