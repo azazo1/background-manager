@@ -13,7 +13,7 @@ pub enum ErrorKind {
     #[error("json serializing error")]
     JsonSer,
     #[error("tray error")]
-    Tray
+    Tray,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -27,6 +27,7 @@ pub struct Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+#[allow(dead_code)]
 impl Error {
     pub(crate) fn new(kind: ErrorKind) -> Self {
         Self {
