@@ -66,7 +66,7 @@ export function useTaskActions() {
     }
   }, []);
 
-  const manualRunTask = useCallback(async (id: number) => {
+  const manuallyRunTask = useCallback(async (id: number) => {
     try {
       setError(null);
       await taskApi.manualRunTask(id);
@@ -76,5 +76,5 @@ export function useTaskActions() {
     }
   }, []);
 
-  return { saveTask, removeTask, switchTask, manualRunTask, loading, error };
+  return { saveTask, removeTask, switchTask, manuallyRunTask, loading, error };
 }

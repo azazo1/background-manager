@@ -35,8 +35,8 @@ export function TaskList({
             const ms = (task.trigger as any).content;
             return t("task.every", { time: (ms / 1000).toFixed(1) });
           case "Instant":
-            return t("task.onceAt", { 
-              time: new Date((task.trigger as any).content).toLocaleString() 
+            return t("task.onceAt", {
+              time: new Date((task.trigger as any).content).toLocaleString()
             });
           case "Startup":
             return t("trigger.startup");
@@ -123,7 +123,7 @@ export function TaskList({
               <p className="text-xs text-slate-600 truncate mb-1">{task.program}</p>
               <div className="flex flex-wrap gap-2 text-xs text-slate-500">
                 <span>{getTriggerLabel(task)}</span>
-                {task.last_exit_code !== undefined && (
+                {task.last_exit_code || task.last_exit_code === 0 ? (
                   <span
                     className={cn(
                       "px-1.5 py-0.5 rounded",
@@ -134,7 +134,7 @@ export function TaskList({
                   >
                     {t("task.exit")} {task.last_exit_code}
                   </span>
-                )}
+                ): null}
                 {task.last_run_at && (
                   <span className="text-slate-400">
                     {t("task.last", { time: formatLastRun(task.last_run_at) })}

@@ -12,7 +12,7 @@ import type { Task } from "./types/task";
 function App() {
   const { t, i18n } = useTranslation();
   const { tasks, loading, error, fetchTasks, setTasks } = useTaskList();
-  const { saveTask, removeTask, switchTask, manualRunTask } = useTaskActions();
+  const { saveTask, removeTask, switchTask, manuallyRunTask } = useTaskActions();
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [taskRunStatus, setTaskRunStatus] = useState<Record<number, boolean>>({});
@@ -77,7 +77,7 @@ function App() {
 
   const handleRunTask = async (id: number) => {
     try {
-      await manualRunTask(id);
+      await manuallyRunTask(id);
     } catch (err) {
       console.error("Failed to run task:", err);
     }

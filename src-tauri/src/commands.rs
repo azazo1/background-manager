@@ -48,7 +48,10 @@ pub(crate) async fn remove_task(app_state: State<'_, AppState>, id: i64) -> Resu
 }
 
 #[tauri::command]
-pub(crate) async fn manual_run_task(app_state: State<'_, AppState>, id: i64) -> Result<(), String> {
+pub(crate) async fn manually_run_task(
+    app_state: State<'_, AppState>,
+    id: i64,
+) -> Result<(), String> {
     app_state
         .scheduler()
         .manually_run_task(id)

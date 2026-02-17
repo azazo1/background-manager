@@ -26,7 +26,7 @@ pub async fn run() {
             get_task,
             save_task,
             remove_task,
-            manual_run_task,
+            manually_run_task,
             switch_task,
             reconnect_db,
             is_task_running,

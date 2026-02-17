@@ -23,7 +23,7 @@ export const taskApi = {
   },
 
   async manualRunTask(id: number): Promise<void> {
-    return invoke("manual_run_task", { id });
+    return invoke("manually_run_task", { id });
   },
 
   async isTaskRunning(id: number): Promise<boolean> {

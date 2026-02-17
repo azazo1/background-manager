@@ -65,17 +65,29 @@ fn failed_to_recv(e: oneshot::error::RecvError) -> crate::Error {
 impl Scheduler {
     pub(crate) async fn bind(db: DatabaseConnection) -> Self {
         let (tx, rx) = mpsc::channel(100);
-        tx.send(Msg::Reconnect(db)).await.ok();
-        let schedule_handle = tokio::spawn(async move { Self::schedule(rx).await });
+        let schedule_handle = tokio::spawn(async move { Self::schedule(rx, db).await });
         Scheduler {
             tx,
             schedule_handle,
         }
     }
 
-    async fn schedule(mut rx: mpsc::Receiver<Msg>) -> crate::Result<()> {
-        let mut db = DatabaseConnection::default();
+    async fn schedule(
+        mut rx: mpsc::Receiver<Msg>,
+        mut db: DatabaseConnection,
+    ) -> crate::Result<()> {
         let mut guards: HashMap<i64, mpsc::Sender<GuardMsg>> = HashMap::new();
+
+        for task in db.list_tasks().await? {
+            let Some(id) = task.id else {
+                continue;
+            };
+            let (guard_tx, guard_rx) = mpsc::channel(10);
+            guards.insert(id, guard_tx);
+            let db = db.clone();
+            tokio::spawn(async move { Self::task_guard(db, task, guard_rx).await });
+        }
+
         while let Some(msg) = rx.recv().await {
             match msg {
                 Msg::Reconnect(conn) => {
@@ -98,7 +110,7 @@ impl Scheduler {
                         guard_tx.send(GuardMsg::RunTaskManually).await.ok();
                     };
                 }
-                Msg::SaveTask(task) => {
+                Msg::SaveTask(mut task) => {
                     // 不管是添加还是修改 task, 都删除原来的 guard, 创建新的 guard.
                     let id = match db.save_task(task.clone()).await {
                         Ok(id) => id,
@@ -114,6 +126,7 @@ impl Scheduler {
                     if let Some(guard_tx) = guards.get(&id) {
                         guard_tx.send(GuardMsg::RemoveTask).await.ok();
                     }
+                    task.id = Some(id);
                     let (guard_tx, guard_rx) = mpsc::channel(10);
                     guards.insert(id, guard_tx);
                     let db = db.clone();

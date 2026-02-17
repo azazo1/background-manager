@@ -176,7 +176,6 @@ impl TaskDAO for DatabaseConnection {
         let a = am.save(self).await.map_err(|e| {
             crate::Error::with_source(crate::ErrorKind::Db, "failed to insert task", Box::new(e))
         })?;
-        dbg!(&a);
         Ok(a.id.unwrap())
     }
 
