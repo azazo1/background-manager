@@ -21,7 +21,15 @@ pub async fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(AppState::build().await.unwrap())
-        .invoke_handler(tauri::generate_handler![list_tasks])
+        .invoke_handler(tauri::generate_handler![
+            list_tasks,
+            get_task,
+            save_task,
+            remove_task,
+            manual_run_task,
+            switch_task,
+            reconnect_db
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

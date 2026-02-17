@@ -2,8 +2,7 @@ use std::{path::PathBuf, time::Duration};
 
 use chrono::{DateTime, FixedOffset};
 use sea_orm::{
-    ActiveModelBehavior, ActiveModelTrait, ActiveValue::Unchanged, DatabaseConnection, EntityTrait,
-    NotSet, Set,
+    ActiveModelTrait, ActiveValue::Unchanged, DatabaseConnection, EntityTrait, NotSet, Set,
 };
 use serde::{Deserialize, Serialize};
 

@@ -1,7 +1,5 @@
 use std::path::Path;
 
-use tokio::io;
-
 pub(crate) trait EnsureDirExists: Sized {
     fn ensure_dir_exists(self) -> crate::Result<Self>;
 }

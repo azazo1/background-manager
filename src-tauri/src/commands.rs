@@ -1,5 +1,4 @@
 use tauri::State;
-use tracing::{error, warn};
 
 use crate::{
     app_state::AppState,
@@ -71,8 +70,5 @@ pub(crate) async fn switch_task(
 
 #[tauri::command]
 pub(crate) async fn reconnect_db(app_state: State<'_, AppState>) -> Result<(), String> {
-    app_state.reconnect_db().await.map_err(|e| {
-        error!(target: "command", "{e:?}");
-        format!("{e}")
-    })
+    app_state.reconnect_db().await.map_err(|e| format!("{e}"))
 }
