@@ -1,18 +1,18 @@
 //! 调度任务的执行.
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use sea_orm::DatabaseConnection;
 use tokio::{
     process::{self, Child},
-    sync::mpsc,
+    sync::{mpsc, oneshot},
     task::JoinHandle,
 };
 use tracing::warn;
 
 use crate::task::{Task, TaskDAO, Trigger};
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 enum Msg {
     Reconnect(DatabaseConnection),
     // id
@@ -20,16 +20,18 @@ enum Msg {
     // id
     RunTaskManually(i64),
     // id, enabled
-    SwitchTask((i64, bool)),
+    SwitchTask(i64, bool),
     SaveTask(Task),
+    QueryRunning(i64, oneshot::Sender<bool>),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 enum GuardMsg {
     Reconnect(DatabaseConnection),
     RemoveTask,
     SwitchTask(bool),
     RunTaskManually,
+    QueryRunning(oneshot::Sender<bool>),
 }
 
 pub(crate) struct Scheduler {
@@ -47,6 +49,14 @@ fn failed_to_send(e: mpsc::error::SendError<Msg>) -> crate::Error {
     crate::Error::with_source(
         crate::ErrorKind::Io,
         "failed to send scheduler message",
+        Box::new(e),
+    )
+}
+
+fn failed_to_recv(e: oneshot::error::RecvError) -> crate::Error {
+    crate::Error::with_source(
+        crate::ErrorKind::Io,
+        "failed to receive from guard",
         Box::new(e),
     )
 }
@@ -103,12 +113,17 @@ impl Scheduler {
                         tokio::spawn(async move { Self::task_guard(db, task, guard_rx).await });
                     }
                 }
-                Msg::SwitchTask((id, enabled)) => {
+                Msg::SwitchTask(id, enabled) => {
                     if let Some(guard_tx) = guards.get(&id) {
                         guard_tx.send(GuardMsg::SwitchTask(enabled)).await.ok();
                     }
                     if let Err(e) = db.switch_task(id, enabled).await {
                         warn!("failed to switch task {id}: {e:?}");
+                    }
+                }
+                Msg::QueryRunning(id, tx) => {
+                    if let Some(guard_tx) = guards.get(&id) {
+                        guard_tx.send(GuardMsg::QueryRunning(tx)).await.ok();
                     }
                 }
             }
@@ -131,6 +146,9 @@ impl Scheduler {
         } else {
             None
         };
+        if let Trigger::Startup = task.trigger {
+            Self::run_and_record(&mut child, &db, &task).await;
+        }
 
         loop {
             tokio::select! {
@@ -150,6 +168,9 @@ impl Scheduler {
                             if !enabled && let Some(child) = &mut child {
                                 child.kill().await.ok();
                             }
+                        }
+                        GuardMsg::QueryRunning(tx) => {
+                            tx.send(child.is_some()).ok();
                         }
                     }
                 }
@@ -263,7 +284,7 @@ impl Scheduler {
 
     pub(crate) async fn switch_task(&self, id: i64, enable: bool) -> crate::Result<()> {
         self.tx
-            .send(Msg::SwitchTask((id, enable)))
+            .send(Msg::SwitchTask(id, enable))
             .await
             .map_err(failed_to_send)
     }
@@ -280,5 +301,14 @@ impl Scheduler {
             .send(Msg::RemoveTask(id))
             .await
             .map_err(failed_to_send)
+    }
+
+    pub(crate) async fn is_running(&self, id: i64) -> crate::Result<bool> {
+        let (tx, rx) = oneshot::channel();
+        self.tx
+            .send(Msg::QueryRunning(id, tx))
+            .await
+            .map_err(failed_to_send)?;
+        rx.await.map_err(failed_to_recv)
     }
 }
