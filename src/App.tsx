@@ -136,7 +136,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-6 py-6">
@@ -181,7 +181,7 @@ function App() {
         {/* Error Banner */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
             <div>
               <h3 className="font-semibold text-red-900">{t("error.title")}</h3>
               <p className="text-sm text-red-700 mt-1">{error}</p>
