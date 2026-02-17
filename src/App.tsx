@@ -7,6 +7,7 @@ import { TaskList } from "./components/TaskList";
 import { TaskEditDialog } from "./components/TaskEditDialog";
 import { Button } from "./components/ui/button";
 import { useTaskList, useTaskActions } from "./lib/hooks";
+import { taskApi } from "./lib/api";
 import type { Task } from "./types/task";
 
 function App() {
@@ -16,23 +17,36 @@ function App() {
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [taskRunStatus, setTaskRunStatus] = useState<Record<number, boolean>>({});
+  const [runnableProgramStatus, setRunnableProgramStatus] = useState<Record<number, boolean>>({});
 
   // Update task statuses
   const updateTaskStatuses = async (taskList: Task[] = tasks) => {
     const statuses: Record<number, boolean> = {};
+    const runnableStatus: Record<number, boolean> = {};
     for (const task of taskList) {
       if (task.id) {
         try {
-          const isRunning = await import("./lib/api").then((m) =>
-            m.taskApi.isTaskRunning(task.id!)
-          );
+          const isRunning = await taskApi.isTaskRunning(task.id);
           statuses[task.id] = isRunning;
         } catch {
           statuses[task.id] = false;
         }
+
+        // Check if program is runnable
+        if (task.program) {
+          try {
+            const isRunnable = await taskApi.isProgramRunnable(task.program);
+            runnableStatus[task.id] = isRunnable;
+          } catch {
+            runnableStatus[task.id] = false;
+          }
+        } else {
+          runnableStatus[task.id] = false;
+        }
       }
     }
     setTaskRunStatus(statuses);
+    setRunnableProgramStatus(runnableStatus);
   };
 
   // Auto-refresh task statuses every second
@@ -199,6 +213,7 @@ function App() {
             onRun={handleRunTask}
             onToggleEnabled={handleToggleTask}
             isRunning={taskRunStatus}
+            runnablePrograms={runnableProgramStatus}
           />
         )}
       </main>

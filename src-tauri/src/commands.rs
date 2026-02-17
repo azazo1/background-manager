@@ -1,5 +1,8 @@
+use std::path::Path;
+
 use tauri::State;
 use tauri_plugin_dialog::DialogExt;
+use tokio::fs;
 
 use crate::{
     app_state::AppState,
@@ -97,4 +100,23 @@ pub(crate) async fn pick_file(window: tauri::Window) -> Result<Option<String>, S
         .and_then(|f| f.as_path())
         .and_then(|f| f.to_str())
         .map(str::to_string))
+}
+
+#[tauri::command]
+pub(crate) async fn is_program_runnable(path: &Path) -> Result<bool, String> {
+    match fs::metadata(path).await {
+        Ok(md) => {
+            #[cfg(unix)]
+            {
+                use std::os::unix::prelude::MetadataExt;
+
+                // .app 目录或者可执行文件.
+                if md.mode() & 0o111 == 0 {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        }
+        Err(_) => Ok(false),
+    }
 }

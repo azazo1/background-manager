@@ -30,7 +30,8 @@ pub async fn run() {
             switch_task,
             reconnect_db,
             is_task_running,
-            pick_file
+            pick_file,
+            is_program_runnable
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -37,4 +37,8 @@ export const taskApi = {
   async pickFile(): Promise<string | null> {
     return invoke("pick_file");
   },
+
+  async isProgramRunnable(path: string): Promise<boolean> {
+    return invoke("is_program_runnable", { path });
+  }
 };

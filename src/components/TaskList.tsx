@@ -14,6 +14,7 @@ interface TaskListProps {
   onRun: (id: number) => void;
   onToggleEnabled: (id: number, enabled: boolean) => void;
   isRunning?: Record<number, boolean>;
+  runnablePrograms?: Record<number, boolean>;
 }
 
 export function TaskList({
@@ -23,6 +24,7 @@ export function TaskList({
   onRun,
   onToggleEnabled,
   isRunning = {},
+  runnablePrograms = {},
 }: TaskListProps) {
   const { t } = useTranslation();
   const [runningTasks, setRunningTasks] = useState<Set<number>>(new Set());
@@ -105,10 +107,17 @@ export function TaskList({
     <div className="space-y-2">
       {tasks.map((task) => {
         const running = isRunning[task.id!] || runningTasks.has(task.id!);
+        const programRunnable = runnablePrograms[task.id!] !== false;
         return (
           <div
             key={task.id}
-            className="flex items-center gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-all hover:shadow-sm"
+            className={cn(
+              "flex items-center gap-3 p-4 bg-white border rounded-lg transition-all hover:shadow-sm",
+              programRunnable
+                ? "border-slate-200 hover:border-slate-300"
+                : "border-yellow-400 hover:border-yellow-500"
+            )}
+            title={programRunnable ? undefined : t("task.programNotRunnable")}
           >
             {/* Main task info */}
             <div className="flex-1 min-w-0">

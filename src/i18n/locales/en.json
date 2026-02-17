@@ -64,7 +64,8 @@
     "every": "Every {{time}}s",
     "onceAt": "Once at {{time}}",
     "last": "Last: {{time}}",
-    "defaultNameDisplay": "[task]"
+    "defaultNameDisplay": "[task]",
+    "programNotRunnable": "Program not found or is not runnable"
   },
   "error": {
     "title": "Error",

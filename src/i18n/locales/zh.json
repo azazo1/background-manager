@@ -64,7 +64,8 @@
     "every": "每 {{time}} 秒",
     "onceAt": "于 {{time}} 执行一次",
     "last": "最后: {{time}}",
-    "defaultNameDisplay": "[任务]"
+    "defaultNameDisplay": "[任务]",
+    "programNotRunnable": "程序不存在或者不可执行"
   },
   "error": {
     "title": "错误",
