@@ -101,6 +101,11 @@ function App() {
     localStorage.setItem("language", lng);
   };
 
+  const handleLanguageToggle = () => {
+    const nextLanguage = i18n.language === "en" ? "zh" : "en";
+    handleLanguageChange(nextLanguage);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
@@ -116,27 +121,15 @@ function App() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {/* Language Selector */}
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={i18n.language === "en" ? "default" : "outline"}
-                  onClick={() => handleLanguageChange("en")}
-                  className="text-xs"
-                >
-                  <Globe className="h-3 w-3 mr-1" />
-                  English
-                </Button>
-                <Button
-                  size="sm"
-                  variant={i18n.language === "zh" ? "default" : "outline"}
-                  onClick={() => handleLanguageChange("zh")}
-                  className="text-xs"
-                >
-                  <Globe className="h-3 w-3 mr-1" />
-                  中文
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleLanguageToggle}
+                className="text-xs"
+              >
+                <Globe className="h-3 w-3 mr-1" />
+                {i18n.language === "en" ? "EN" : "ZH"}
+              </Button>
               <Button onClick={handleCreateTask} size="lg">
                 {t("button.newTask")}
               </Button>
