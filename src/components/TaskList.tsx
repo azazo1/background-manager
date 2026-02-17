@@ -159,7 +159,7 @@ export function TaskList({
                 size="sm"
                 variant="ghost"
                 onClick={() => handleRun(task.id)}
-                disabled={running}
+                disabled={running || !task.enabled}
                 title={t("button.run")}
               >
                 <Play className="h-4 w-4" />
