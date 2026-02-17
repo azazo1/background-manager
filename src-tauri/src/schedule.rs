@@ -1,6 +1,6 @@
 //! 调度任务的执行.
 
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, ffi::OsStr, time::Duration};
 
 use sea_orm::DatabaseConnection;
 use tokio::{
@@ -270,13 +270,24 @@ impl Scheduler {
         }
     }
 
-    /// 执行任务程序.
+    /// 执行任务程序, 对于macos .app 程序, 使用 open 工具打开, 不支持标准流重定向和获取退出码.
     ///
     /// # Note
     ///
     /// 不会操作 database 数据, 需要手动修改.
     async fn run_task(task: Task) -> crate::Result<Child> {
-        let mut cmd = process::Command::new(&task.program);
+        let mut cmd = if cfg!(target_os = "macos")
+            && task.program.is_dir()
+            && matches!(
+                task.program.extension().and_then(OsStr::to_str),
+                Some("app")
+            ) {
+            let mut cmd = process::Command::new("/usr/bin/open");
+            cmd.arg("-a").arg(&task.program);
+            cmd
+        } else {
+            process::Command::new(&task.program)
+        };
         cmd.args(&task.args);
         cmd.kill_on_drop(true);
 
