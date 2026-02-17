@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { AlertCircle, Globe } from "lucide-react";
+import { AlertCircle, Globe, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import "./App.css";
@@ -17,27 +17,31 @@ function App() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [taskRunStatus, setTaskRunStatus] = useState<Record<number, boolean>>({});
 
-  // Update task statuses periodically
-  useEffect(() => {
-    const updateStatuses = async () => {
-      const statuses: Record<number, boolean> = {};
-      for (const task of tasks) {
-        if (task.id) {
-          try {
-            const isRunning = await import("./lib/api").then((m) =>
-              m.taskApi.isTaskRunning(task.id!)
-            );
-            statuses[task.id] = isRunning;
-          } catch {
-            statuses[task.id] = false;
-          }
+  // Update task statuses
+  const updateTaskStatuses = async (taskList: Task[] = tasks) => {
+    const statuses: Record<number, boolean> = {};
+    for (const task of taskList) {
+      if (task.id) {
+        try {
+          const isRunning = await import("./lib/api").then((m) =>
+            m.taskApi.isTaskRunning(task.id!)
+          );
+          statuses[task.id] = isRunning;
+        } catch {
+          statuses[task.id] = false;
         }
       }
-      setTaskRunStatus(statuses);
-    };
+    }
+    setTaskRunStatus(statuses);
+  };
 
-    const interval = setInterval(updateStatuses, 2000);
-    updateStatuses();
+  // Auto-refresh task statuses every second
+  useEffect(() => {
+    updateTaskStatuses();
+    const interval = setInterval(async () => {
+      updateTaskStatuses();
+      fetchTasks();
+    }, 2000);
     return () => clearInterval(interval);
   }, [tasks]);
 
@@ -101,6 +105,17 @@ function App() {
     localStorage.setItem("language", lng);
   };
 
+  const handleRefresh = async () => {
+    try {
+      await fetchTasks();
+      await updateTaskStatuses();
+      toast.success(t("toast.refreshSuccess"));
+    } catch (err) {
+      console.error("Failed to refresh tasks:", err);
+      toast.error(t("toast.refreshFailed"));
+    }
+  };
+
   const handleLanguageToggle = () => {
     const nextLanguage = i18n.language === "en" ? "zh" : "en";
     handleLanguageChange(nextLanguage);
@@ -121,6 +136,15 @@ function App() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRefresh}
+                className="text-xs"
+                title={t("button.refresh")}
+              >
+                <RefreshCw className="h-3 w-3" />
+              </Button>
               <Button
                 size="sm"
                 variant="outline"

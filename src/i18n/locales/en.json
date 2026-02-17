@@ -5,6 +5,7 @@
   },
   "button": {
     "newTask": "+ New Task",
+    "refresh": "Refresh",
     "create": "Create Task",
     "update": "Update Task",
     "cancel": "Cancel",
@@ -91,6 +92,8 @@
     "runFailed": "Failed to run task",
     "toggleSuccess": "Task updated successfully",
     "toggleFailed": "Failed to update task",
+    "refreshSuccess": "Tasks refreshed successfully",
+    "refreshFailed": "Failed to refresh tasks",
     "unknownError": "Unknown error occurred"
   }
 }

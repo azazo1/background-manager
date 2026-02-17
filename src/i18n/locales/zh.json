@@ -5,6 +5,7 @@
   },
   "button": {
     "newTask": "+ 新建任务",
+    "refresh": "刷新",
     "create": "创建任务",
     "update": "更新任务",
     "cancel": "取消",
@@ -91,6 +92,8 @@
     "runFailed": "运行任务失败",
     "toggleSuccess": "任务更新成功",
     "toggleFailed": "更新任务失败",
+    "refreshSuccess": "任务刷新成功",
+    "refreshFailed": "刷新任务失败",
     "unknownError": "发生未知错误"
   }
 }
