@@ -5,6 +5,8 @@ use tauri::{
 };
 use tracing::debug;
 
+use crate::config::PKG_NAME;
+
 pub(crate) fn focus_window(app: &AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.unminimize();
@@ -29,6 +31,7 @@ pub(crate) fn init_tray(app: &mut App) -> crate::Result<()> {
 
     let _tray = TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
+        .tooltip(PKG_NAME)
         .show_menu_on_left_click(false)
         .menu(&menu)
         .on_menu_event(|app, event| match event.id.as_ref() {
