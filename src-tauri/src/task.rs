@@ -7,10 +7,11 @@ use sea_orm::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Default)]
+/// 触发模式, 所有模式之中, 如果任务程序已经在执行, 那么不会再被触发.
+#[derive(Deserialize, Serialize, Default, Clone, Debug, PartialEq, Eq)]
 #[serde(tag = "tag", content = "content")]
 pub enum Trigger {
-    /// 间隔指定时间触发一次, 如果上一个实例没有结束, 会创建第二个实例.
+    /// 间隔指定时间触发一次.
     Routine(Duration),
     /// 在应用开启时启动.
     Startup,
@@ -19,11 +20,12 @@ pub enum Trigger {
     /// 手动启动.
     #[default]
     Manual,
-    /// 指定时间点启动
+    /// 指定时间点启动.
     Instant(DateTime<FixedOffset>),
+    // todo until succeed.
 }
 
-#[derive(Deserialize, Serialize, bon::Builder)]
+#[derive(Deserialize, Serialize, bon::Builder, Clone, Debug)]
 pub struct Task {
     /// Task id, 不能重复, 在数据库中自动递增.
     pub id: Option<i64>,
@@ -131,6 +133,11 @@ pub trait TaskDAO {
     /// 启用/禁用某个 task.
     async fn switch_task(&self, id: i64, enabled: bool) -> crate::Result<()>;
     /// 更新任务的执行状态.
+    ///
+    /// # Note
+    ///
+    /// 任务执行状态和执行时间不是严格对应的, 当任务正在执行而没有退出的时候,
+    /// 任务执行状态为上一次执行结束的结果, 运行时间为本次的执行时间.
     async fn update_task_exit_code(&self, id: i64, exit_code: i64) -> crate::Result<()>;
     /// 更新任务的执行时间.
     async fn update_task_run_at(

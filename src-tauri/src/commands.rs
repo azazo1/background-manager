@@ -8,45 +8,65 @@ use crate::{
 
 #[tauri::command]
 pub(crate) async fn list_tasks(app_state: State<'_, AppState>) -> Result<Vec<Task>, String> {
-    todo!()
+    app_state
+        .db()
+        .await
+        .list_tasks()
+        .await
+        .map_err(|e| format!("{e}"))
 }
 
 #[tauri::command]
-pub(crate) async fn get_task(app_state: State<'_, AppState>, id: i64) -> Result<Task, String> {
-    todo!()
+pub(crate) async fn get_task(
+    app_state: State<'_, AppState>,
+    id: i64,
+) -> Result<Option<Task>, String> {
+    app_state
+        .db()
+        .await
+        .get_task(id)
+        .await
+        .map_err(|e| format!("{e}"))
 }
 
 #[tauri::command]
-pub(crate) async fn save_task(app_state: State<'_, AppState>, task: Task) -> Result<i64, String> {
-    todo!()
+pub(crate) async fn save_task(app_state: State<'_, AppState>, task: Task) -> Result<(), String> {
+    app_state
+        .scheduler()
+        .save_task(task)
+        .await
+        .map_err(|e| format!("{e}"))
 }
 
 #[tauri::command]
-pub(crate) async fn remove_task(app_state: State<'_, AppState>) -> Result<(), String> {
-    todo!()
+pub(crate) async fn remove_task(app_state: State<'_, AppState>, id: i64) -> Result<(), String> {
+    app_state
+        .scheduler()
+        .remove_task(id)
+        .await
+        .map_err(|e| format!("{e}"))
 }
 
 #[tauri::command]
 pub(crate) async fn manual_run_task(app_state: State<'_, AppState>, id: i64) -> Result<(), String> {
-    if let Err(e) = app_state
-        .db()
+    app_state
+        .scheduler()
+        .manually_run_task(id)
         .await
-        .update_task_run_at(id, chrono::Local::now().fixed_offset())
-        .await
-    {
-        warn!(target: "command", "{e:?}");
-    }
-
-    // todo 使用 schedule 模块执行 task, 上面的 update_task_run_at 放在内部.
-    Ok(())
+        .map_err(|e| format!("{e}"))
 }
 
 #[tauri::command]
 pub(crate) async fn switch_task(
     app_state: State<'_, AppState>,
+    id: i64,
     enable: bool,
 ) -> Result<(), String> {
-    todo!()
+    app_state
+        .scheduler()
+        .switch_task(id, enable)
+        .await
+        .map_err(|e| format!("{e}"))
 }
 
 #[tauri::command]

@@ -3,11 +3,15 @@ use sea_orm::{Database, DatabaseConnection};
 use tokio::sync::{RwLock, RwLockReadGuard};
 use tracing::warn;
 
-use crate::config::{AppConfig, config_dir, db_path};
+use crate::{
+    config::{AppConfig, config_dir, db_path},
+    schedule::Scheduler,
+};
 
 pub(crate) struct AppState {
     config: RwLock<AppConfig>,
     db: RwLock<DatabaseConnection>,
+    scheduler: Scheduler,
 }
 
 impl AppState {
@@ -37,9 +41,11 @@ impl AppState {
     pub(crate) async fn build() -> crate::Result<Self> {
         let db = Self::open_database().await?;
         let config = AppConfig::load_from_file(config_dir()?.join("config.toml")).await?;
+        let scheduler = Scheduler::bind(db.clone()).await;
         Ok(AppState {
             config: RwLock::new(config),
             db: RwLock::new(db),
+            scheduler,
         })
     }
 
@@ -49,10 +55,17 @@ impl AppState {
             warn!("failed to close database: {e:?}");
         };
         *db = Self::open_database().await?;
+
+        // 通知 scheduler 使用新的数据库连接
+        self.scheduler.refresh_connection(db.clone()).await?;
         Ok(())
     }
 
     pub(crate) async fn db(&self) -> RwLockReadGuard<'_, DatabaseConnection> {
         self.db.read().await
+    }
+
+    pub(crate) fn scheduler(&self) -> &Scheduler {
+        &self.scheduler
     }
 }
