@@ -113,7 +113,7 @@ export function TaskList({
             {/* Main task info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-slate-900 truncate">{task.name}</h3>
+                <h3 className="font-semibold text-slate-900 truncate">{task.name || t("task.defaultNameDisplay")}</h3>
                 {running && (
                   <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
                     {t("task.running")}
@@ -134,7 +134,7 @@ export function TaskList({
                   >
                     {t("task.exit")} {task.last_exit_code}
                   </span>
-                ): null}
+                ) : null}
                 {task.last_run_at && (
                   <span className="text-slate-400">
                     {t("task.last", { time: formatLastRun(task.last_run_at) })}

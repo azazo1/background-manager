@@ -39,7 +39,7 @@
     "scheduledTime": "Scheduled Time",
     "noArguments": "No arguments yet",
     "required": "*",
-    "requiredNote": "and program path are required"
+    "requiredNote": "program path is required"
   },
   "trigger": {
     "manual": "Manual",
@@ -56,7 +56,8 @@
     "exit": "Exit:",
     "every": "Every {{time}}s",
     "onceAt": "Once at {{time}}",
-    "last": "Last: {{time}}"
+    "last": "Last: {{time}}",
+    "defaultNameDisplay": "[task]"
   },
   "error": {
     "title": "Error",
@@ -73,7 +74,7 @@
   },
   "validation": {
     "required": "Required Fields",
-    "fillRequired": "Please fill in task name and program path"
+    "fillRequired": "Please fill in program path"
   },
   "toast": {
     "saveSuccess": "Task saved successfully",

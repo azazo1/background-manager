@@ -33,6 +33,13 @@ interface TaskEditDialogProps {
 
 type TriggerType = "Manual" | "Startup" | "KeepAlive" | "Routine" | "Instant" | "UntilSucceed";
 
+const getProgramBaseName = (programPath: string) => {
+  if (!programPath) return "";
+  let normalized = programPath.replace(/\\/g, "/");
+  normalized = normalized.replace(/\/*$/, '');
+  return normalized.split("/").pop() || "";
+};
+
 export function TaskEditDialog({
   open,
   task,
@@ -53,10 +60,12 @@ export function TaskEditDialog({
   const [routineMs, setRoutineMs] = useState<number>(5000);
   const [instantTime, setInstantTime] = useState<string>("");
   const [browsingProgram, setBrowsingProgram] = useState(false);
+  const [isNameAuto, setIsNameAuto] = useState(true);
 
   useEffect(() => {
     if (task) {
       setFormData(task);
+      setIsNameAuto(false);
       if (typeof task.trigger === "object" && "tag" in task.trigger) {
         setTriggerType(task.trigger.tag);
         if (task.trigger.tag === "Routine") {
@@ -76,15 +85,31 @@ export function TaskEditDialog({
       setTriggerType("Manual");
       setRoutineMs(5000);
       setInstantTime("");
+      setIsNameAuto(true);
     }
   }, [task, open]);
+
+  const handleProgramChange = (value: string) => {
+    const shouldAutoName = !formData.name || isNameAuto;
+    const derivedName = shouldAutoName ? getProgramBaseName(value) : formData.name;
+
+    setFormData((prev) => ({
+      ...prev,
+      program: value,
+      name: derivedName,
+    }));
+
+    if (shouldAutoName) {
+      setIsNameAuto(true);
+    }
+  };
 
   const handleBrowseProgram = async () => {
     try {
       setBrowsingProgram(true);
       const filePath = await taskApi.pickFile();
       if (filePath) {
-        setFormData((prev) => ({ ...prev, program: filePath }));
+        handleProgramChange(filePath);
       }
     } catch (err) {
       console.error("Failed to pick file:", err);
@@ -158,13 +183,15 @@ export function TaskEditDialog({
   };
 
   const handleSave = () => {
-    if (!formData.name || !formData.program) {
+    if (!formData.program) {
       toast.error(t("validation.required"), {
         description: t("validation.fillRequired")
       });
       return;
     }
-    onSave(formData);
+    const trimmedName = formData.name.trim();
+    const derivedName = trimmedName || getProgramBaseName(formData.program);
+    onSave({ ...formData, name: derivedName });
   };
 
   return (
@@ -183,15 +210,17 @@ export function TaskEditDialog({
           {/* Task Name */}
           <div className="space-y-2">
             <Label htmlFor="task-name">
-              {t("form.taskName")} {t("form.required")}
+              {t("form.taskName")}
             </Label>
             <Input
               id="task-name"
               placeholder="e.g., Database Backup"
               value={formData.name}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, name: e.target.value }))
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData((prev) => ({ ...prev, name: value }));
+                setIsNameAuto(value.trim().length === 0);
+              }}
             />
           </div>
 
@@ -205,9 +234,7 @@ export function TaskEditDialog({
                 id="program"
                 placeholder="/path/to/program or program.exe"
                 value={formData.program}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, program: e.target.value }))
-                }
+                onChange={(e) => handleProgramChange(e.target.value)}
                 className="flex-1"
               />
               <Button

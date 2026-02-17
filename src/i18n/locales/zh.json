@@ -39,7 +39,7 @@
     "scheduledTime": "计划时间",
     "noArguments": "暂无参数",
     "required": "*",
-    "requiredNote": "和程序路径是必需的"
+    "requiredNote": "程序路径为必填"
   },
   "trigger": {
     "manual": "手动",
@@ -56,7 +56,8 @@
     "exit": "退出码:",
     "every": "每 {{time}} 秒",
     "onceAt": "于 {{time}} 执行一次",
-    "last": "最后: {{time}}"
+    "last": "最后: {{time}}",
+    "defaultNameDisplay": "[任务]"
   },
   "error": {
     "title": "错误",
@@ -73,7 +74,7 @@
   },
   "validation": {
     "required": "必填字段",
-    "fillRequired": "请填写任务名称和程序路径"
+    "fillRequired": "请填写程序路径"
   },
   "toast": {
     "saveSuccess": "任务保存成功",
