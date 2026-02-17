@@ -12,6 +12,8 @@ pub enum ErrorKind {
     TomlSer,
     #[error("json serializing error")]
     JsonSer,
+    #[error("tray error")]
+    Tray
 }
 
 #[derive(thiserror::Error, Debug)]

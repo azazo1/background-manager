@@ -40,5 +40,9 @@ export const taskApi = {
 
   async isProgramRunnable(path: string): Promise<boolean> {
     return invoke("is_program_runnable", { path });
+  },
+
+  async exit(): Promise<void> {
+    return invoke("exit");
   }
 };

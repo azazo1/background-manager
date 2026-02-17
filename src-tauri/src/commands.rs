@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use tauri::State;
+use tauri::{AppHandle, State};
 use tauri_plugin_dialog::DialogExt;
 use tokio::fs;
 
@@ -119,4 +119,11 @@ pub(crate) async fn is_program_runnable(path: &Path) -> Result<bool, String> {
         }
         Err(_) => Ok(false),
     }
+}
+
+#[tauri::command]
+pub(crate) async fn exit(app: AppHandle, app_state: State<'_, AppState>) -> Result<(), String> {
+    app_state.scheduler().close().await;
+    app.exit(0);
+    Ok(())
 }

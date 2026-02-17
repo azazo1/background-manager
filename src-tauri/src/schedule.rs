@@ -24,6 +24,7 @@ enum Msg {
     SwitchTask(i64, bool),
     SaveTask(Task),
     QueryRunning(i64, oneshot::Sender<bool>),
+    Close,
 }
 
 #[derive(Debug)]
@@ -33,6 +34,7 @@ enum GuardMsg {
     SwitchTask(bool),
     RunTaskManually,
     QueryRunning(oneshot::Sender<bool>),
+    Close,
 }
 
 pub(crate) struct Scheduler {
@@ -145,6 +147,12 @@ impl Scheduler {
                         guard_tx.send(GuardMsg::QueryRunning(tx)).await.ok();
                     }
                 }
+                Msg::Close => {
+                    for guard_tx in guards.values() {
+                        guard_tx.send(GuardMsg::Close).await.ok();
+                    }
+                    break;
+                }
             }
         }
         Ok(())
@@ -194,7 +202,9 @@ impl Scheduler {
                     match msg {
                         GuardMsg::Reconnect(new_conn) => db = new_conn,
                         GuardMsg::RemoveTask => {
-                            if let Some(c) = &mut child { c.kill().await.ok(); }
+                            if let Some(c) = &mut child {
+                                c.kill().await.ok();
+                            }
                             break; // 退出 guard, 这里的 exit_code 不需要记录到数据库, 因为数据已经删除了.
                         },
                         GuardMsg::RunTaskManually => {
@@ -208,6 +218,14 @@ impl Scheduler {
                         }
                         GuardMsg::QueryRunning(tx) => {
                             tx.send(child.is_some()).ok();
+                        }
+                        GuardMsg::Close => {
+                            if let Some(mut c) = child.take() {
+                                c.kill().await.ok();
+                                let code = c.wait().await.ok().and_then(|s| s.code()).unwrap_or(-1);
+                                db.update_task_exit_code(id, code as i64).await.ok();
+                            }
+                            break;
                         }
                     }
                 }
@@ -244,8 +262,8 @@ impl Scheduler {
                         None
                     }
                 }, if child.is_some() => {
-                    if let Some(Ok(exit_status)) = status {
-                        let code = exit_status.code().unwrap_or(-1) as i64;
+                    if let Some(exit_status) = status {
+                        let code = exit_status.ok().and_then(|s| s.code()).unwrap_or(-1) as i64;
                         db.update_task_exit_code(id, code).await.ok();
                         child = None;
 
@@ -372,5 +390,10 @@ impl Scheduler {
             .await
             .map_err(failed_to_send)?;
         rx.await.map_err(failed_to_recv)
+    }
+
+    /// 关闭所有的 task, 并且关闭后台协程, 后台协程关闭之后其他方法调用将返回 Err.
+    pub(crate) async fn close(&self) {
+        self.tx.send(Msg::Close).await.ok();
     }
 }

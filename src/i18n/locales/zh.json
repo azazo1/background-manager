@@ -6,6 +6,7 @@
   "button": {
     "newTask": "+ 新建任务",
     "refresh": "刷新",
+    "exit": "退出",
     "create": "创建任务",
     "update": "更新任务",
     "cancel": "取消",
@@ -22,7 +23,9 @@
     "createTitle": "创建新任务",
     "editTitle": "编辑任务",
     "createDesc": "配置新的后台任务",
-    "editDesc": "修改任务设置（启用状态从任务列表中更改）"
+    "editDesc": "修改任务设置（启用状态从任务列表中更改）",
+    "exitTitle": "退出",
+    "exitDesc": "确定要退出应用吗？"
   },
   "form": {
     "taskName": "任务名称",

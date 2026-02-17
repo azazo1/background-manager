@@ -1,11 +1,19 @@
 import { useState, useEffect } from "react";
-import { AlertCircle, Globe, RefreshCw } from "lucide-react";
+import { AlertCircle, Globe, Power, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import "./App.css";
 import { TaskList } from "./components/TaskList";
 import { TaskEditDialog } from "./components/TaskEditDialog";
 import { Button } from "./components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./components/ui/dialog";
 import { useTaskList, useTaskActions } from "./lib/hooks";
 import { taskApi } from "./lib/api";
 import type { Task } from "./types/task";
@@ -16,6 +24,7 @@ function App() {
   const { saveTask, removeTask, switchTask, manuallyRunTask } = useTaskActions();
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [exitDialogOpen, setExitDialogOpen] = useState(false);
   const [taskRunStatus, setTaskRunStatus] = useState<Record<number, boolean>>({});
   const [runnableProgramStatus, setRunnableProgramStatus] = useState<Record<number, boolean>>({});
 
@@ -135,6 +144,15 @@ function App() {
     handleLanguageChange(nextLanguage);
   };
 
+  const handleExitApp = async () => {
+    try {
+      await taskApi.exit();
+    } catch (err) {
+      console.error("Failed to exit app:", err);
+      toast.error(t("toast.unknownError"));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100">
       {/* Header */}
@@ -167,6 +185,14 @@ function App() {
               >
                 <Globe className="h-3 w-3 mr-1" />
                 {i18n.language === "en" ? "EN" : "ZH"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setExitDialogOpen(true)}
+                title={t("button.exit")}
+              >
+                <Power className="h-3 w-3" />
               </Button>
               <Button onClick={handleCreateTask} size="lg">
                 {t("button.newTask")}
@@ -225,6 +251,31 @@ function App() {
         onOpenChange={setDialogOpen}
         onSave={handleSaveTask}
       />
+
+      <Dialog open={exitDialogOpen} onOpenChange={setExitDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("dialog.exitTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("dialog.exitDesc")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setExitDialogOpen(false)}>
+              {t("button.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                setExitDialogOpen(false);
+                await handleExitApp();
+              }}
+            >
+              {t("button.exit")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

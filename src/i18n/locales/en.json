@@ -6,6 +6,7 @@
   "button": {
     "newTask": "+ New Task",
     "refresh": "Refresh",
+    "exit": "Exit",
     "create": "Create Task",
     "update": "Update Task",
     "cancel": "Cancel",
@@ -22,7 +23,9 @@
     "createTitle": "Create New Task",
     "editTitle": "Edit Task",
     "createDesc": "Configure a new background task",
-    "editDesc": "Modify task settings (enabled status changed from the task list)"
+    "editDesc": "Modify task settings (enabled status changed from the task list)",
+    "exitTitle": "Exit",
+    "exitDesc": "Are you sure you want to exit the application?"
   },
   "form": {
     "taskName": "Task Name",

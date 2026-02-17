@@ -39,8 +39,10 @@ pub async fn run() {
             reconnect_db,
             is_task_running,
             pick_file,
-            is_program_runnable
+            is_program_runnable,
+            exit
         ])
+        .setup(|app| Ok(tray::init_tray(app)?))
         .on_window_event(|window, evt| {
             if window.label() != "main" {
                 return;
