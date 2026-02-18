@@ -17,13 +17,16 @@
     "run": "运行",
     "browse": "浏览",
     "addArgument": "添加参数",
-    "retry": "重试"
+    "retry": "重试",
+    "settings": "设置"
   },
   "dialog": {
     "createTitle": "创建新任务",
     "editTitle": "编辑任务",
     "createDesc": "配置新的后台任务",
     "editDesc": "修改任务设置（启用状态从任务列表中更改）",
+    "settingsTitle": "应用设置",
+    "settingsDesc": "配置应用行为和偏好设置",
     "exitTitle": "退出",
     "exitDesc": "确定要退出应用吗？"
   },
@@ -44,6 +47,8 @@
     "noArguments": "暂无参数",
     "required": "*",
     "requiredNote": "程序路径为必填",
+    "quietLaunch": "后台启动",
+    "quietLaunchDesc": "应用启动时在后台运行，不显示窗口",
     "noConsole": "隐藏控制台",
     "noConsoleDesc": "启动程序时隐藏控制台窗口"
   },
@@ -96,6 +101,7 @@
     "deleteFailed": "删除任务失败",
     "runSuccess": "任务启动成功",
     "runFailed": "运行任务失败",
+    "loadConfigFailed": "加载应用设置失败",
     "toggleSuccess": "任务更新成功",
     "toggleFailed": "更新任务失败",
     "refreshSuccess": "任务刷新成功",

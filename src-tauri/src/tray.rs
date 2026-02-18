@@ -1,19 +1,11 @@
 use tauri::{
-    App, AppHandle, Manager,
+    App, Manager,
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
 };
 use tracing::debug;
 
-use crate::config::PKG_NAME;
-
-pub(crate) fn focus_window(app: &AppHandle) {
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
-    }
-}
+use crate::{config::PKG_NAME, utils::toggle_window};
 
 pub(crate) fn init_tray(app: &mut App) -> crate::Result<()> {
     let failed_to_create_menu = |e| {
@@ -43,7 +35,7 @@ pub(crate) fn init_tray(app: &mut App) -> crate::Result<()> {
                 });
             }
             "show" => {
-                focus_window(app);
+                toggle_window(app, true);
             }
             _ => {
                 debug!("menu item {:?} not handled", event.id);
@@ -56,7 +48,7 @@ pub(crate) fn init_tray(app: &mut App) -> crate::Result<()> {
                 ..
             } => {
                 // 点击托盘图标展示并聚焦于主窗口
-                focus_window(tray.app_handle());
+                toggle_window(tray.app_handle(), true);
             }
             _ => {
                 debug!("unhandled tray event: {event:?}");

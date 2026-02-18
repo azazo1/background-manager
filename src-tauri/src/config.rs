@@ -41,10 +41,16 @@ pub(crate) fn config_dir() -> crate::Result<PathBuf> {
 
 pub(crate) const PKG_NAME: &str = env!("CARGO_PKG_NAME");
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, bon::Builder, Clone)]
 pub(crate) struct AppConfig {
     #[serde(skip)]
-    file: PathBuf,
+    #[builder(skip)]
+    file: Option<PathBuf>,
+
+    /// 后台启动应用.
+    #[serde(default)]
+    #[builder(default = false)]
+    quiet_launch: bool,
 }
 
 impl AppConfig {
@@ -76,12 +82,18 @@ impl AppConfig {
                 Box::new(e),
             )
         })?;
-        config.file = file.as_ref().into();
+        config.file = Some(file.as_ref().into());
         Ok(config)
     }
 
     pub(crate) async fn save(&self) -> crate::Result<()> {
-        if self.file.as_os_str().is_empty() {
+        let Some(file) = &self.file else {
+            return Err(crate::Error::with_message(
+                crate::ErrorKind::Io,
+                "no file bounded",
+            ));
+        };
+        if file.as_os_str().is_empty() {
             return Err(crate::Error::with_message(
                 crate::ErrorKind::Io,
                 "invalid saving file path: [empty]",
@@ -94,12 +106,24 @@ impl AppConfig {
                 Box::new(e),
             )
         })?;
-        fs::write(&self.file, content).await.map_err(|e| {
+        fs::write(&file, content).await.map_err(|e| {
             crate::Error::with_source(
                 crate::ErrorKind::Io,
-                format!("failed to write config file: {}", self.file.display()),
+                format!("failed to write config file: {}", file.display()),
                 Box::new(e),
             )
         })
+    }
+
+    pub(crate) fn update(&mut self, config: Self) {
+        let file = self.file.take();
+        *self = config;
+        self.file = file;
+    }
+
+    #[inline]
+    #[must_use]
+    pub(crate) fn quiet_launch(&self) -> bool {
+        self.quiet_launch
     }
 }

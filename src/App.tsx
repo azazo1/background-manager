@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { AlertCircle, Globe, Power, RefreshCw } from "lucide-react";
+import { AlertCircle, Globe, Power, RefreshCw, Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import "./App.css";
 import { TaskList } from "./components/TaskList";
 import { TaskEditDialog } from "./components/TaskEditDialog";
+import { AppConfigDialog } from "./components/AppConfigDialog";
 import { Button } from "./components/ui/button";
 import {
   Dialog,
@@ -15,7 +16,7 @@ import {
   DialogTitle,
 } from "./components/ui/dialog";
 import { useTaskList, useTaskActions } from "./lib/hooks";
-import { taskApi } from "./lib/api";
+import { taskApi, appApi } from "./lib/api";
 import type { Task } from "./types/task";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
   const { saveTask, removeTask, switchTask, manuallyRunTask } = useTaskActions();
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [exitDialogOpen, setExitDialogOpen] = useState(false);
   const [taskRunStatus, setTaskRunStatus] = useState<Record<number, boolean>>({});
   const [runnableProgramStatus, setRunnableProgramStatus] = useState<Record<number, boolean>>({});
@@ -146,7 +148,7 @@ function App() {
 
   const handleExitApp = async () => {
     try {
-      await taskApi.exit();
+      await appApi.exit();
     } catch (err) {
       console.error("Failed to exit app:", err);
       toast.error(t("toast.unknownError"));
@@ -176,6 +178,15 @@ function App() {
                 title={t("button.refresh")}
               >
                 <RefreshCw className="h-3 w-3" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setConfigDialogOpen(true)}
+                className="text-xs"
+                title={t("button.settings")}
+              >
+                <Settings className="h-3 w-3" />
               </Button>
               <Button
                 size="sm"
@@ -250,6 +261,12 @@ function App() {
         task={selectedTask}
         onOpenChange={setDialogOpen}
         onSave={handleSaveTask}
+      />
+
+      {/* App Config Dialog */}
+      <AppConfigDialog
+        open={configDialogOpen}
+        onOpenChange={setConfigDialogOpen}
       />
 
       <Dialog open={exitDialogOpen} onOpenChange={setExitDialogOpen}>

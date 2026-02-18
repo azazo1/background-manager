@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { Task } from "../types/task";
+import type { AppConfig } from "../types/config";
 
 export const taskApi = {
   async listTasks(): Promise<Task[]> {
@@ -41,8 +42,20 @@ export const taskApi = {
   async isProgramRunnable(path: string): Promise<boolean> {
     return invoke("is_program_runnable", { path });
   },
+};
 
+export const appApi = {
   async exit(): Promise<void> {
     return invoke("exit");
+  }
+}
+
+export const configApi = {
+  async getConfig(): Promise<AppConfig> {
+    return invoke("get_config");
+  },
+
+  async saveConfig(config: AppConfig): Promise<void> {
+    return invoke("update_config", { config });
   }
 };

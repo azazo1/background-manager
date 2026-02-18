@@ -6,6 +6,7 @@ use tokio::fs;
 
 use crate::{
     app_state::AppState,
+    config::AppConfig,
     task::{Task, TaskDAO},
 };
 
@@ -126,4 +127,20 @@ pub(crate) async fn exit(app: AppHandle, app_state: State<'_, AppState>) -> Resu
     app_state.scheduler().close().await;
     app.exit(0);
     Ok(())
+}
+
+#[tauri::command]
+pub(crate) async fn get_config(app_state: State<'_, AppState>) -> Result<AppConfig, String> {
+    Ok(app_state.get_config().await)
+}
+
+#[tauri::command]
+pub(crate) async fn update_config(
+    app_state: State<'_, AppState>,
+    config: AppConfig,
+) -> Result<(), String> {
+    app_state
+        .update_config(config)
+        .await
+        .map_err(|e| format!("{e}"))
 }

@@ -68,4 +68,15 @@ impl AppState {
     pub(crate) fn scheduler(&self) -> &Scheduler {
         &self.scheduler
     }
+
+    pub(crate) async fn get_config(&self) -> AppConfig {
+        self.config.read().await.clone()
+    }
+
+    pub(crate) async fn update_config(&self, config: AppConfig) -> crate::Result<()> {
+        let mut cfg = self.config.write().await;
+        cfg.update(config);
+        cfg.save().await?;
+        Ok(())
+    }
 }

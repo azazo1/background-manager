@@ -17,13 +17,16 @@
     "run": "Run",
     "browse": "Browse",
     "addArgument": "Add Argument",
-    "retry": "Retry"
+    "retry": "Retry",
+    "settings": "Settings"
   },
   "dialog": {
     "createTitle": "Create New Task",
     "editTitle": "Edit Task",
     "createDesc": "Configure a new background task",
     "editDesc": "Modify task settings (enabled status changed from the task list)",
+    "settingsTitle": "Application Settings",
+    "settingsDesc": "Configure application behavior and preferences",
     "exitTitle": "Exit",
     "exitDesc": "Are you sure you want to exit the application?"
   },
@@ -45,7 +48,9 @@
     "required": "*",
     "requiredNote": "program path is required",
     "noConsole": "Hide Console",
-    "noConsoleDesc": "Hide console window when the program starts"
+    "noConsoleDesc": "Hide console window when the program starts",
+    "quietLaunch": "Quiet Launch",
+    "quietLaunchDesc": "Start the application in the background without showing the window"
   },
   "trigger": {
     "manual": "Manual",
@@ -99,6 +104,7 @@
     "toggleSuccess": "Task updated successfully",
     "toggleFailed": "Failed to update task",
     "refreshSuccess": "Tasks refreshed successfully",
+    "loadConfigFailed": "Failed to load application settings",
     "refreshFailed": "Failed to refresh tasks",
     "unknownError": "Unknown error occurred"
   }
