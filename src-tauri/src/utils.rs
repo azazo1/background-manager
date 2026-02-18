@@ -48,7 +48,7 @@ pub(crate) fn toggle_window(app: &AppHandle, show: bool) {
             window.show().ok();
             window.set_focus().ok();
         } else {
-            window.minimize().ok();
+            window.hide().ok();
         }
     }
     toggle_dock_icon(show);
