@@ -48,7 +48,7 @@ pub struct Task {
     pub last_exit_code: Option<i64>,
     #[builder(skip)]
     pub last_run_at: Option<DateTime<FixedOffset>>,
-    /// 是否在启动的时候不创建
+    /// 是否在启动的时候不创建终端窗口 (仅 Windows 下有效)
     #[builder(default = false)]
     pub no_console: bool,
 }
@@ -119,7 +119,7 @@ impl From<Task> for entity::tasks::ActiveModel {
             trigger_content: Set(content),
             last_exit_code: NotSet,
             last_run_at: NotSet,
-            no_console: Set(t.no_console)
+            no_console: Set(t.no_console),
         }
     }
 }

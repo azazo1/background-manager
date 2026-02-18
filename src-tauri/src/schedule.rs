@@ -322,8 +322,10 @@ impl Scheduler {
         cmd.args(&task.args);
         #[cfg(windows)]
         {
-            const CREATE_NO_WINDOW: u32 = 0x08000000;
-            cmd.creation_flags(CREATE_NO_WINDOW);
+            if task.no_console {
+                const CREATE_NO_WINDOW: u32 = 0x08000000;
+                cmd.creation_flags(CREATE_NO_WINDOW);
+            }
         }
         cmd.kill_on_drop(true);
 
