@@ -6,10 +6,10 @@ sea-orm-generate:
 # sea-orm-migrate:
 #     sea-orm-cli migrate init -d src-tauri/migration
 # sea-orm-migrate-create-table:
-#     sea-orm-cli migrate generate create_table
+#     cd src-tauri && sea-orm-cli migrate generate create_table
 
 create-db:
-    rm data.db
+    rm -f data.db
     sqlite3 data.db < init.sql
 
 dev:

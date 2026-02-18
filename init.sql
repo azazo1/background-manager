@@ -36,3 +36,6 @@ CREATE TABLE IF NOT EXISTS tasks (
 -- 为常用过滤字段创建索引，优化查询性能
 CREATE INDEX IF NOT EXISTS idx_tasks_enabled ON tasks(enabled);
 CREATE INDEX IF NOT EXISTS idx_tasks_trigger_tag ON tasks(trigger_tag);
+
+-- 添加 no_console 列，默认为 0 (false)
+ALTER TABLE tasks ADD COLUMN no_console BOOLEAN NOT NULL DEFAULT 0;

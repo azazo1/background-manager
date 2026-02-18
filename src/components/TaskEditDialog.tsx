@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -54,6 +55,7 @@ export function TaskEditDialog({
     args: [],
     trigger: { tag: "Manual" },
     enabled: true,
+    no_console: false,
   });
 
   const [triggerType, setTriggerType] = useState<TriggerType>("Manual");
@@ -80,6 +82,7 @@ export function TaskEditDialog({
         program: "",
         args: [],
         trigger: { tag: "Manual" },
+        no_console: false,
         enabled: true,
       });
       setTriggerType("Manual");
@@ -376,6 +379,24 @@ export function TaskEditDialog({
               />
             </div>
           )}
+
+          {/* Console Display Option */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="no-console">{t("form.noConsole")}</Label>
+              <Switch
+                id="no-console"
+                checked={formData.no_console || false}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    no_console: checked,
+                  }))
+                }
+              />
+            </div>
+            <p className="text-xs text-slate-500">{t("form.noConsoleDesc")}</p>
+          </div>
 
           {/* File Redirections */}
           <div className="border-t pt-4 space-y-3">

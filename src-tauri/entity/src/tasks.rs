@@ -28,6 +28,7 @@ pub struct Model {
     pub last_exit_code: Option<i64>,
     #[sea_orm(column_type = "Text", nullable)]
     pub last_run_at: Option<String>,
+    pub no_console: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

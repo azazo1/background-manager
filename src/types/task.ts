@@ -8,6 +8,7 @@ export interface Task {
   stderr?: string;
   trigger: Trigger;
   enabled: boolean;
+  no_console?: boolean;
   last_exit_code?: number;
   last_run_at?: string;
 }

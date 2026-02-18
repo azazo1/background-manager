@@ -43,7 +43,9 @@
     "scheduledTime": "Scheduled Time",
     "noArguments": "No arguments yet",
     "required": "*",
-    "requiredNote": "program path is required"
+    "requiredNote": "program path is required",
+    "noConsole": "Hide Console",
+    "noConsoleDesc": "Hide console window when the program starts"
   },
   "trigger": {
     "manual": "Manual",

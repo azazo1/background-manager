@@ -43,7 +43,9 @@
     "scheduledTime": "计划时间",
     "noArguments": "暂无参数",
     "required": "*",
-    "requiredNote": "程序路径为必填"
+    "requiredNote": "程序路径为必填",
+    "noConsole": "隐藏控制台",
+    "noConsoleDesc": "启动程序时隐藏控制台窗口"
   },
   "trigger": {
     "manual": "手动",

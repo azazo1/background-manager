@@ -48,6 +48,9 @@ pub struct Task {
     pub last_exit_code: Option<i64>,
     #[builder(skip)]
     pub last_run_at: Option<DateTime<FixedOffset>>,
+    /// 是否在启动的时候不创建
+    #[builder(default = false)]
+    pub no_console: bool,
 }
 
 impl From<entity::tasks::Model> for Task {
@@ -82,6 +85,7 @@ impl From<entity::tasks::Model> for Task {
             enabled: m.enabled,
             last_exit_code: m.last_exit_code,
             last_run_at: m.last_run_at.and_then(|s| serde_json::from_str(&s).ok()),
+            no_console: m.no_console,
         }
     }
 }
@@ -115,6 +119,7 @@ impl From<Task> for entity::tasks::ActiveModel {
             trigger_content: Set(content),
             last_exit_code: NotSet,
             last_run_at: NotSet,
+            no_console: Set(t.no_console)
         }
     }
 }
