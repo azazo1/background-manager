@@ -39,3 +39,6 @@ CREATE INDEX IF NOT EXISTS idx_tasks_trigger_tag ON tasks(trigger_tag);
 
 -- 添加 no_console 列，默认为 0 (false)
 ALTER TABLE tasks ADD COLUMN no_console BOOLEAN NOT NULL DEFAULT 0;
+
+-- 添加 working_dir 列, 表示工作目录.
+ALTER TABLE tasks ADD COLUMN working_dir TEXT;

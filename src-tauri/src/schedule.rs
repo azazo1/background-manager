@@ -23,7 +23,7 @@ enum Msg {
     RunTaskManually(i64),
     // id, enabled
     SwitchTask(i64, bool),
-    SaveTask(Task),
+    SaveTask(Box<Task>),
     QueryRunning(i64, oneshot::Sender<TaskStatus>),
     Close,
     // id
@@ -176,8 +176,9 @@ impl Scheduler {
                         guard_tx.send(GuardMsg::RunTaskManually).await.ok();
                     };
                 }
-                Msg::SaveTask(mut task) => {
+                Msg::SaveTask(task) => {
                     // 不管是添加还是修改 task, 都删除原来的 guard, 创建新的 guard.
+                    let mut task = *task;
                     let id = match db.save_task(task.clone()).await {
                         Ok(id) => id,
                         Err(e) => {
@@ -410,6 +411,11 @@ impl Scheduler {
             process::Command::new(&task.program)
         };
         cmd.args(&task.args);
+        if let Some(working_dir) = &task.working_dir {
+            cmd.current_dir(working_dir);
+        } else if let Some(parent) = task.program.parent() {
+            cmd.current_dir(parent);
+        }
         #[cfg(windows)]
         {
             if task.no_console {
@@ -468,7 +474,7 @@ impl Scheduler {
 
     pub(crate) async fn save_task(&self, task: Task) -> crate::Result<()> {
         self.tx
-            .send(Msg::SaveTask(task))
+            .send(Msg::SaveTask(Box::new(task)))
             .await
             .map_err(failed_to_send)
     }

@@ -39,10 +39,6 @@ export const taskApi = {
     return invoke("reconnect_db");
   },
 
-  async pickFile(): Promise<string | null> {
-    return invoke("pick_file");
-  },
-
   async isProgramRunnable(path: string): Promise<boolean> {
     return invoke("is_program_runnable", { path });
   },
@@ -51,6 +47,14 @@ export const taskApi = {
 export const appApi = {
   async exit(): Promise<void> {
     return invoke("exit");
+  },
+
+  async pickFile(): Promise<string | null> {
+    return invoke("pick_file");
+  },
+
+  async pickDir(): Promise<string | null> {
+    return invoke("pick_dir");
   }
 }
 

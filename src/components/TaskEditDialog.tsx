@@ -3,7 +3,7 @@ import { Plus, Trash2, FolderOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { Task, Trigger } from "@/types/task";
-import { taskApi } from "@/lib/api";
+import { appApi } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +52,7 @@ export function TaskEditDialog({
   const [formData, setFormData] = useState<Task>({
     name: "",
     program: "",
+    working_dir: "",
     args: [],
     trigger: { tag: "Manual" },
     enabled: true,
@@ -62,11 +63,15 @@ export function TaskEditDialog({
   const [routineMs, setRoutineMs] = useState<number>(5000);
   const [instantTime, setInstantTime] = useState<string>("");
   const [browsingProgram, setBrowsingProgram] = useState(false);
+  const [browsingWorkingDir, setBrowsingWorkingDir] = useState(false);
   const [isNameAuto, setIsNameAuto] = useState(true);
 
   useEffect(() => {
     if (task) {
-      setFormData(task);
+      setFormData({
+        ...task,
+        working_dir: task.working_dir || "",
+      });
       setIsNameAuto(false);
       if (typeof task.trigger === "object" && "tag" in task.trigger) {
         setTriggerType(task.trigger.tag);
@@ -80,6 +85,7 @@ export function TaskEditDialog({
       setFormData({
         name: "",
         program: "",
+        working_dir: "",
         args: [],
         trigger: { tag: "Manual" },
         no_console: false,
@@ -110,7 +116,7 @@ export function TaskEditDialog({
   const handleBrowseProgram = async () => {
     try {
       setBrowsingProgram(true);
-      const filePath = await taskApi.pickFile();
+      const filePath = await appApi.pickFile();
       if (filePath) {
         handleProgramChange(filePath);
       }
@@ -118,6 +124,23 @@ export function TaskEditDialog({
       console.error("Failed to pick file:", err);
     } finally {
       setBrowsingProgram(false);
+    }
+  };
+
+  const handleBrowseWorkingDir = async () => {
+    try {
+      setBrowsingWorkingDir(true);
+      const dirPath = await appApi.pickDir();
+      if (dirPath) {
+        setFormData((prev) => ({
+          ...prev,
+          working_dir: dirPath,
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to pick directory:", err);
+    } finally {
+      setBrowsingWorkingDir(false);
     }
   };
 
@@ -194,7 +217,12 @@ export function TaskEditDialog({
     }
     const trimmedName = formData.name.trim();
     const derivedName = trimmedName || getProgramBaseName(formData.program);
-    onSave({ ...formData, name: derivedName });
+    const trimmedWorkingDir = formData.working_dir?.trim();
+    onSave({
+      ...formData,
+      name: derivedName,
+      working_dir: trimmedWorkingDir ? trimmedWorkingDir : undefined,
+    });
   };
 
   return (
@@ -251,6 +279,36 @@ export function TaskEditDialog({
                 {t("button.browse")}
               </Button>
             </div>
+          </div>
+
+          {/* Working Directory */}
+          <div className="space-y-2">
+            <Label htmlFor="working-dir">{t("form.workingDir")}</Label>
+            <div className="flex gap-2">
+              <Input
+                id="working-dir"
+                placeholder={t("form.workingDirPlaceholder")}
+                value={formData.working_dir}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    working_dir: e.target.value,
+                  }))
+                }
+                className="flex-1"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleBrowseWorkingDir}
+                disabled={browsingWorkingDir}
+                className="shrink-0"
+              >
+                <FolderOpen className="h-4 w-4 mr-1" />
+                {t("button.browse")}
+              </Button>
+            </div>
+            <p className="text-xs text-slate-500">{t("form.workingDirDesc")}</p>
           </div>
 
           {/* Arguments */}

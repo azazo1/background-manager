@@ -5,8 +5,9 @@ sea-orm-generate:
 
 # sea-orm-migrate:
 #     sea-orm-cli migrate init -d src-tauri/migration
-# sea-orm-migrate-create-table:
-#     cd src-tauri && sea-orm-cli migrate generate create_table
+
+sea-orm-migration name:
+    cd src-tauri && sea-orm-cli migrate generate {{name}}
 
 create-db:
     rm -f data.db

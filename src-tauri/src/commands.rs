@@ -5,7 +5,10 @@ use tauri_plugin_dialog::DialogExt;
 use tokio::fs;
 
 use crate::{
-    app_state::AppState, config::AppConfig, schedule::TaskStatus, task::{Task, TaskDAO}
+    app_state::AppState,
+    config::AppConfig,
+    schedule::TaskStatus,
+    task::{Task, TaskDAO},
 };
 
 #[tauri::command]
@@ -95,6 +98,16 @@ pub(crate) async fn get_task_status(
 pub(crate) async fn pick_file(window: tauri::Window) -> Result<Option<String>, String> {
     let file = window.dialog().file().blocking_pick_file();
     Ok(file
+        .as_ref()
+        .and_then(|f| f.as_path())
+        .and_then(|f| f.to_str())
+        .map(str::to_string))
+}
+
+#[tauri::command]
+pub(crate) async fn pick_dir(window: tauri::Window) -> Result<Option<String>, String> {
+    let folder = window.dialog().file().blocking_pick_folder();
+    Ok(folder
         .as_ref()
         .and_then(|f| f.as_path())
         .and_then(|f| f.to_str())

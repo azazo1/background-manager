@@ -2,6 +2,7 @@ export interface Task {
   id?: number;
   name: string;
   program: string;
+  working_dir?: string;
   args: string[];
   stdin?: string;
   stdout?: string;

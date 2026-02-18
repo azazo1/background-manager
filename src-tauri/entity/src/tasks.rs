@@ -29,6 +29,8 @@ pub struct Model {
     #[sea_orm(column_type = "Text", nullable)]
     pub last_run_at: Option<String>,
     pub no_console: bool,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub working_dir: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

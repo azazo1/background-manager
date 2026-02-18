@@ -34,6 +34,9 @@
   "form": {
     "taskName": "任务名称",
     "programPath": "程序路径",
+    "workingDir": "启动目录",
+    "workingDirPlaceholder": "/path/to/working/dir",
+    "workingDirDesc": "留空则使用程序所在目录",
     "arguments": "参数列表",
     "argumentsNote": "包含空格的参数不会自动拆分",
     "argumentPlaceholder": "参数 {{number}}",

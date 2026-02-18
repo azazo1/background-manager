@@ -48,9 +48,12 @@ pub struct Task {
     pub last_exit_code: Option<i64>,
     #[builder(skip)]
     pub last_run_at: Option<DateTime<FixedOffset>>,
-    /// 是否在启动的时候不创建终端窗口 (仅 Windows 下有效)
+    /// 是否在启动的时候不创建终端窗口 (仅 Windows 下有效).
     #[builder(default = false)]
     pub no_console: bool,
+    /// 程序启动目录, 为空则自动使用程序所在的目录.
+    #[builder(into)]
+    pub working_dir: Option<PathBuf>,
 }
 
 impl From<entity::tasks::Model> for Task {
@@ -75,7 +78,7 @@ impl From<entity::tasks::Model> for Task {
         Task {
             id: Some(m.id),
             name: m.name,
-            program: PathBuf::from(m.program),
+            program: m.program.into(),
             // 将 JSON 字符串解析回 Vec<String>
             args: serde_json::from_str(&m.args).unwrap_or_default(),
             stdin: m.stdin.map(PathBuf::from),
@@ -86,6 +89,7 @@ impl From<entity::tasks::Model> for Task {
             last_exit_code: m.last_exit_code,
             last_run_at: m.last_run_at.and_then(|s| serde_json::from_str(&s).ok()),
             no_console: m.no_console,
+            working_dir: m.working_dir.map(PathBuf::from),
         }
     }
 }
@@ -120,6 +124,7 @@ impl From<Task> for entity::tasks::ActiveModel {
             last_exit_code: NotSet,
             last_run_at: NotSet,
             no_console: Set(t.no_console),
+            working_dir: Set(t.working_dir.map(|p| p.to_string_lossy().into_owned())),
         }
     }
 }

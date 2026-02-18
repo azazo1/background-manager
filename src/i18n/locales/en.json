@@ -34,6 +34,9 @@
   "form": {
     "taskName": "Task Name",
     "programPath": "Program Path",
+    "workingDir": "Working Directory",
+    "workingDirPlaceholder": "/path/to/working/dir",
+    "workingDirDesc": "Leave empty to use the program's directory",
     "arguments": "Arguments",
     "argumentsNote": "Arguments with spaces are not split automatically",
     "argumentPlaceholder": "Argument {{number}}",
