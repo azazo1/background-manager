@@ -40,7 +40,7 @@ pub async fn run() {
             manually_run_task,
             switch_task,
             reconnect_db,
-            is_task_running,
+            get_task_status,
             pick_file,
             is_program_runnable,
             get_config,

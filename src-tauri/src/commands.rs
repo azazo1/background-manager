@@ -5,9 +5,7 @@ use tauri_plugin_dialog::DialogExt;
 use tokio::fs;
 
 use crate::{
-    app_state::AppState,
-    config::AppConfig,
-    task::{Task, TaskDAO},
+    app_state::AppState, config::AppConfig, schedule::TaskStatus, task::{Task, TaskDAO}
 };
 
 #[tauri::command]
@@ -82,13 +80,13 @@ pub(crate) async fn reconnect_db(app_state: State<'_, AppState>) -> Result<(), S
 }
 
 #[tauri::command]
-pub(crate) async fn is_task_running(
+pub(crate) async fn get_task_status(
     app_state: State<'_, AppState>,
     id: i64,
-) -> Result<bool, String> {
+) -> Result<TaskStatus, String> {
     app_state
         .scheduler()
-        .is_running(id)
+        .task_status(id)
         .await
         .map_err(|e| format!("{e}"))
 }

@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { Task } from "../types/task";
+import type { Task, TaskStatus } from "../types/task";
 import type { AppConfig } from "../types/config";
 
 export const taskApi = {
@@ -27,8 +27,8 @@ export const taskApi = {
     return invoke("manually_run_task", { id });
   },
 
-  async isTaskRunning(id: number): Promise<boolean> {
-    return invoke("is_task_running", { id });
+  async getTaskStatus(id: number): Promise<TaskStatus> {
+    return invoke("get_task_status", { id });
   },
 
   async stopTask(id: number): Promise<void> {

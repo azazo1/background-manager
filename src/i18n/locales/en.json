@@ -76,7 +76,8 @@
     "onceAt": "Once at {{time}}",
     "last": "Last: {{time}}",
     "defaultNameDisplay": "[task]",
-    "programNotRunnable": "Program not found or is not runnable"
+    "programNotRunnable": "Program not found or is not runnable",
+    "suspended": "Task suspended due to too many failures"
   },
   "error": {
     "title": "Error",

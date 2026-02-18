@@ -18,6 +18,7 @@ import {
 import { useTaskList, useTaskActions } from "./lib/hooks";
 import { taskApi, appApi } from "./lib/api";
 import type { Task } from "./types/task";
+import { TaskStatus } from "./types/task";
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -29,18 +30,22 @@ function App() {
   const [exitDialogOpen, setExitDialogOpen] = useState(false);
   const [taskRunStatus, setTaskRunStatus] = useState<Record<number, boolean>>({});
   const [runnableProgramStatus, setRunnableProgramStatus] = useState<Record<number, boolean>>({});
+  const [taskStatusById, setTaskStatusById] = useState<Record<number, TaskStatus>>({});
 
   // Update task statuses
   const updateTaskStatuses = async (taskList: Task[] = tasks) => {
     const statuses: Record<number, boolean> = {};
     const runnableStatus: Record<number, boolean> = {};
+    const statusById: Record<number, TaskStatus> = {};
     for (const task of taskList) {
       if (task.id) {
         try {
-          const isRunning = await taskApi.isTaskRunning(task.id);
-          statuses[task.id] = isRunning;
+          const status = await taskApi.getTaskStatus(task.id);
+          statusById[task.id] = status;
+          statuses[task.id] = status === TaskStatus.Running;
         } catch {
           statuses[task.id] = false;
+          statusById[task.id] = TaskStatus.Idle;
         }
 
         // Check if program is runnable
@@ -58,6 +63,7 @@ function App() {
     }
     setTaskRunStatus(statuses);
     setRunnableProgramStatus(runnableStatus);
+    setTaskStatusById(statusById);
   };
 
   // Auto-refresh task statuses every second
@@ -263,6 +269,7 @@ function App() {
             onToggleEnabled={handleToggleTask}
             isRunning={taskRunStatus}
             runnablePrograms={runnableProgramStatus}
+            taskStatuses={taskStatusById}
           />
         )}
       </main>

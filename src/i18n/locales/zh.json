@@ -76,7 +76,8 @@
     "onceAt": "于 {{time}} 执行一次",
     "last": "最后: {{time}}",
     "defaultNameDisplay": "[任务]",
-    "programNotRunnable": "程序不存在或者不可执行"
+    "programNotRunnable": "程序不存在或者不可执行",
+    "suspended": "任务失败次数过多，已暂停执行"
   },
   "error": {
     "title": "错误",

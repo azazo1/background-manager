@@ -3,6 +3,7 @@
 use std::{collections::HashMap, ffi::OsStr, time::Duration};
 
 use sea_orm::DatabaseConnection;
+use serde::Serialize;
 use tokio::{
     process::{self, Child},
     sync::{mpsc, oneshot},
@@ -23,7 +24,7 @@ enum Msg {
     // id, enabled
     SwitchTask(i64, bool),
     SaveTask(Task),
-    QueryRunning(i64, oneshot::Sender<bool>),
+    QueryRunning(i64, oneshot::Sender<TaskStatus>),
     Close,
     // id
     StopTask(i64),
@@ -35,9 +36,69 @@ enum GuardMsg {
     RemoveTask,
     SwitchTask(bool),
     RunTaskManually,
-    QueryRunning(oneshot::Sender<bool>),
+    QueryRunning(oneshot::Sender<TaskStatus>),
     Close,
     StopTask,
+}
+
+#[derive(PartialEq, Eq, Debug, Clone, Copy, Serialize)]
+pub(crate) enum TaskStatus {
+    Suspended,
+    Running,
+    Idle,
+}
+
+/// Suspension 逻辑: 在指定秒数内任务触发失败次数达到指定次数则触发 suspension, 暂停任务的自动执行.
+#[derive(Default, Debug)]
+struct SuspensionDetector {
+    start_time: Option<Instant>,
+    failures: usize,
+    has_suspended: bool,
+}
+
+impl SuspensionDetector {
+    const SUSPENSION_TIMESPAN: Duration = Duration::from_secs(3);
+    const SUSPENSION_FAILURES: usize = 6;
+
+    #[inline]
+    #[must_use]
+    fn new() -> Self {
+        Self::default()
+    }
+
+    #[inline]
+    #[must_use]
+    fn suspended(&self) -> bool {
+        self.has_suspended
+    }
+
+    /// 记录一次失败, 并返回是否为 suspended 状态.
+    fn fail(&mut self) -> bool {
+        if self.has_suspended {
+            return true;
+        }
+        self.failures += 1;
+        if let Some(start_time) = self.start_time
+            && Instant::now().duration_since(start_time) <= Self::SUSPENSION_TIMESPAN
+            && self.failures >= Self::SUSPENSION_FAILURES
+        {
+            self.has_suspended = true;
+            return true;
+        } else {
+            self.start_time = Some(Instant::now());
+            if self.failures >= Self::SUSPENSION_FAILURES {
+                self.has_suspended = true;
+                return true;
+            }
+        }
+        false
+    }
+
+    fn reset(&mut self) {
+        self.start_time = None;
+        self.failures = 0;
+        self.has_suspended = false;
+    }
 }
 
 pub(crate) struct Scheduler {
@@ -173,6 +234,7 @@ impl Scheduler {
     ) -> crate::Result<()> {
         let id = task.id.unwrap();
         let mut child: Option<Child> = None;
+        let mut suspension_detector = SuspensionDetector::new();
 
         // 初始化触发器
         let mut interval = None;
@@ -216,16 +278,24 @@ impl Scheduler {
                             break; // 退出 guard, 这里的 exit_code 不需要记录到数据库, 因为数据已经删除了.
                         },
                         GuardMsg::RunTaskManually => {
+                            suspension_detector.reset();
                             Self::run_and_record(&mut child, &db, &task).await;
                         }
                         GuardMsg::SwitchTask(enabled) => {
+                            suspension_detector.reset();
                             task.enabled = enabled;
                             if !enabled && let Some(child) = &mut child {
                                 child.kill().await.ok();
                             }
                         }
                         GuardMsg::QueryRunning(tx) => {
-                            tx.send(child.is_some()).ok();
+                            tx.send(if child.is_some() {
+                                TaskStatus::Running
+                            } else if suspension_detector.suspended() {
+                                TaskStatus::Suspended
+                            } else {
+                                TaskStatus::Idle
+                            }).ok();
                         }
                         GuardMsg::Close => {
                             if let Some(mut c) = child.take() {
@@ -284,7 +354,12 @@ impl Scheduler {
 
                         // 如果是 KeepAlive，立即重新启动
                         if let Trigger::KeepAlive = task.trigger {
-                            Self::run_and_record(&mut child, &db, &task).await;
+                            if code != 0 {
+                                suspension_detector.fail();
+                            }
+                            if !suspension_detector.suspended() {
+                                Self::run_and_record(&mut child, &db, &task).await;
+                            }
                         } else if let Trigger::UntilSucceed = task.trigger && code != 0 {
                             Self::run_and_record(&mut child, &db, &task).await;
                         }
@@ -405,7 +480,7 @@ impl Scheduler {
             .map_err(failed_to_send)
     }
 
-    pub(crate) async fn is_running(&self, id: i64) -> crate::Result<bool> {
+    pub(crate) async fn task_status(&self, id: i64) -> crate::Result<TaskStatus> {
         let (tx, rx) = oneshot::channel();
         self.tx
             .send(Msg::QueryRunning(id, tx))

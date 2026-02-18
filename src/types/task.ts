@@ -27,3 +27,9 @@ export interface TaskRunStatus {
   last_exit_code?: number;
   last_run_at?: string;
 }
+
+export enum TaskStatus {
+  Suspended = "Suspended",
+  Running = "Running",
+  Idle = "Idle"
+}

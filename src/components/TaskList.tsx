@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { ChevronRight, Play, Square, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { Task } from "@/types/task";
+import { TaskStatus } from "@/types/task";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,6 +25,7 @@ interface TaskListProps {
   onToggleEnabled: (id: number, enabled: boolean) => void;
   isRunning?: Record<number, boolean>;
   runnablePrograms?: Record<number, boolean>;
+  taskStatuses?: Record<number, TaskStatus>;
 }
 
 export function TaskList({
@@ -35,6 +37,7 @@ export function TaskList({
   onToggleEnabled,
   isRunning = {},
   runnablePrograms = {},
+  taskStatuses = {},
 }: TaskListProps) {
   const { t } = useTranslation();
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
@@ -114,16 +117,25 @@ export function TaskList({
         {tasks.map((task) => {
           const running = isRunning[task.id!];
           const programRunnable = runnablePrograms[task.id!] !== false;
+          const status = taskStatuses[task.id!];
+          const isSuspended = status === TaskStatus.Suspended;
+          const tooltip = isSuspended
+            ? t("task.suspended")
+            : programRunnable
+              ? undefined
+              : t("task.programNotRunnable");
           return (
             <div
               key={task.id}
               className={cn(
                 "flex items-center gap-3 p-4 bg-white border rounded-lg transition-all hover:shadow-sm",
-                programRunnable
-                  ? "border-slate-200 hover:border-slate-300"
-                  : "border-yellow-400 hover:border-yellow-500"
+                isSuspended
+                  ? "border-red-400 hover:border-red-500"
+                  : programRunnable
+                    ? "border-slate-200 hover:border-slate-300"
+                    : "border-yellow-400 hover:border-yellow-500"
               )}
-              title={programRunnable ? undefined : t("task.programNotRunnable")}
+              title={tooltip}
             >
               {/* Main task info */}
               <div className="flex-1 min-w-0">
