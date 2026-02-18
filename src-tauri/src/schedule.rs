@@ -320,6 +320,11 @@ impl Scheduler {
             process::Command::new(&task.program)
         };
         cmd.args(&task.args);
+        #[cfg(windows)]
+        {
+            const CREATE_NO_WINDOW: u32 = 0x08000000;
+            cmd.creation_flags(CREATE_NO_WINDOW);
+        }
         cmd.kill_on_drop(true);
 
         if let Some(stdin) = &task.stdin
