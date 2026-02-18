@@ -112,6 +112,17 @@ function App() {
     }
   };
 
+  const handleStopTask = async (id: number) => {
+    try {
+      await taskApi.stopTask(id);
+      await updateTaskStatuses();
+      toast.success(t("toast.stopSuccess"));
+    } catch (err) {
+      console.error("Failed to stop task:", err);
+      toast.error(t("toast.stopFailed"));
+    }
+  };
+
   const handleToggleTask = async (id: number, enabled: boolean) => {
     try {
       await switchTask(id, enabled);
@@ -248,6 +259,7 @@ function App() {
             onEdit={handleEditTask}
             onDelete={handleDeleteTask}
             onRun={handleRunTask}
+            onStop={handleStopTask}
             onToggleEnabled={handleToggleTask}
             isRunning={taskRunStatus}
             runnablePrograms={runnableProgramStatus}

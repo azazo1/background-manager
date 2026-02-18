@@ -31,6 +31,10 @@ export const taskApi = {
     return invoke("is_task_running", { id });
   },
 
+  async stopTask(id: number): Promise<void> {
+    return invoke("stop_task", { id });
+  },
+
   async reconnectDb(): Promise<void> {
     return invoke("reconnect_db");
   },

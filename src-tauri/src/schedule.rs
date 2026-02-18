@@ -25,6 +25,8 @@ enum Msg {
     SaveTask(Task),
     QueryRunning(i64, oneshot::Sender<bool>),
     Close,
+    // id
+    StopTask(i64),
 }
 
 #[derive(Debug)]
@@ -35,6 +37,7 @@ enum GuardMsg {
     RunTaskManually,
     QueryRunning(oneshot::Sender<bool>),
     Close,
+    StopTask,
 }
 
 pub(crate) struct Scheduler {
@@ -153,6 +156,11 @@ impl Scheduler {
                     }
                     break;
                 }
+                Msg::StopTask(id) => {
+                    if let Some(guard_tx) = guards.get(&id) {
+                        guard_tx.send(GuardMsg::StopTask).await.ok();
+                    }
+                }
             }
         }
         Ok(())
@@ -226,6 +234,13 @@ impl Scheduler {
                                 db.update_task_exit_code(id, code as i64).await.ok();
                             }
                             break;
+                        }
+                        GuardMsg::StopTask => {
+                            if let Some(mut c) = child.take() {
+                                c.kill().await.ok();
+                                let code = c.wait().await.ok().and_then(|s| s.code()).unwrap_or(-1);
+                                db.update_task_exit_code(id, code as i64).await.ok();
+                            }
                         }
                     }
                 }
@@ -397,6 +412,14 @@ impl Scheduler {
             .await
             .map_err(failed_to_send)?;
         rx.await.map_err(failed_to_recv)
+    }
+
+    /// 终止正在运行的 task.
+    pub(crate) async fn stop_task(&self, id: i64) -> crate::Result<()> {
+        self.tx
+            .send(Msg::StopTask(id))
+            .await
+            .map_err(failed_to_send)
     }
 
     /// 关闭所有的 task, 并且关闭后台协程, 后台协程关闭之后其他方法调用将返回 Err.

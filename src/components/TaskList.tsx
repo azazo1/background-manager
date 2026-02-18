@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { ChevronRight, Play, Trash2 } from "lucide-react";
+import { ChevronRight, Play, Square, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { Task } from "@/types/task";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ interface TaskListProps {
   onEdit: (task: Task) => void;
   onDelete: (id: number) => void;
   onRun: (id: number) => void;
+  onStop: (id: number) => void;
   onToggleEnabled: (id: number, enabled: boolean) => void;
   isRunning?: Record<number, boolean>;
   runnablePrograms?: Record<number, boolean>;
@@ -30,12 +31,12 @@ export function TaskList({
   onEdit,
   onDelete,
   onRun,
+  onStop,
   onToggleEnabled,
   isRunning = {},
   runnablePrograms = {},
 }: TaskListProps) {
   const { t } = useTranslation();
-  const [runningTasks, setRunningTasks] = useState<Set<number>>(new Set());
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   const getTriggerLabel = (task: Task): string => {
@@ -90,22 +91,10 @@ export function TaskList({
 
   const handleRun = async (id: number | undefined) => {
     if (id) {
-      setRunningTasks((prev) => new Set([...prev, id]));
       try {
         await onRun(id);
-        setTimeout(() => {
-          setRunningTasks((prev) => {
-            const next = new Set(prev);
-            next.delete(id);
-            return next;
-          });
-        }, 1000);
-      } catch {
-        setRunningTasks((prev) => {
-          const next = new Set(prev);
-          next.delete(id);
-          return next;
-        });
+      } catch (err) {
+        console.error(err);
       }
     }
   };
@@ -123,7 +112,7 @@ export function TaskList({
     <>
       <div className="space-y-2">
         {tasks.map((task) => {
-          const running = isRunning[task.id!] || runningTasks.has(task.id!);
+          const running = isRunning[task.id!];
           const programRunnable = runnablePrograms[task.id!] !== false;
           return (
             <div
@@ -180,16 +169,28 @@ export function TaskList({
                   className="data-[state=unchecked]:bg-slate-200"
                 />
 
-                {/* Manual run button */}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleRun(task.id)}
-                  disabled={running || !task.enabled}
-                  title={t("button.run")}
-                >
-                  <Play className="h-4 w-4" />
-                </Button>
+                {/* Manual run/stop button */}
+                {running ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => task.id && onStop(task.id)}
+                    className="bg-red-500 hover:bg-red-600 text-white hover:text-white"
+                    title={t("button.stop")}
+                  >
+                    <Square className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleRun(task.id)}
+                    disabled={!task.enabled}
+                    title={t("button.run")}
+                  >
+                    <Play className="h-4 w-4" />
+                  </Button>
+                )}
 
                 {/* Edit button */}
                 <Button

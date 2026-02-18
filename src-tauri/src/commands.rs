@@ -144,3 +144,12 @@ pub(crate) async fn update_config(
         .await
         .map_err(|e| format!("{e}"))
 }
+
+#[tauri::command]
+pub(crate) async fn stop_task(app_state: State<'_, AppState>, id: i64) -> Result<(), String> {
+    app_state
+        .scheduler()
+        .stop_task(id)
+        .await
+        .map_err(|e| format!("{e}"))
+}

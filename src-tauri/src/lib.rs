@@ -45,7 +45,8 @@ pub async fn run() {
             is_program_runnable,
             get_config,
             update_config,
-            exit
+            exit,
+            stop_task
         ])
         .setup(|app| {
             tray::init_tray(app)?;
