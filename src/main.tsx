@@ -10,7 +10,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <I18nextProvider i18n={i18n}>
       <App />
-      <Toaster position="top-right" richColors />
+      <Toaster position="bottom-right" richColors />
     </I18nextProvider>
   </React.StrictMode>,
 );
