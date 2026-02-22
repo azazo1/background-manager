@@ -286,8 +286,12 @@ impl Scheduler {
                         GuardMsg::SwitchTask(enabled) => {
                             suspension_detector.reset();
                             task.enabled = enabled;
-                            if !enabled && let Some(child) = &mut child {
-                                child.kill().await.ok();
+                            if !enabled {
+                                if let Some(child) = &mut child  {
+                                    child.kill().await.ok();
+                                }
+                            } else if let Trigger::KeepAlive = task.trigger {
+                                Self::run_and_record(&mut child, &db, &task).await.ok();
                             }
                         }
                         GuardMsg::QueryRunning(tx) => {
