@@ -12,6 +12,7 @@ export interface Task {
   no_console?: boolean;
   last_exit_code?: number;
   last_run_at?: string;
+  env_vars?: Record<string, string>;
 }
 
 export type Trigger =

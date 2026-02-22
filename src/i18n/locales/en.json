@@ -18,6 +18,7 @@
     "stop": "Stop",
     "browse": "Browse",
     "addArgument": "Add Argument",
+    "addVariable": "Add Variable",
     "retry": "Retry",
     "settings": "Settings"
   },
@@ -40,6 +41,10 @@
     "arguments": "Arguments",
     "argumentsNote": "Arguments with spaces are not split automatically",
     "argumentPlaceholder": "Argument {{number}}",
+    "environmentVariables": "Environment Variables",
+    "environmentVariablesNote": "Set environment variables for the program",
+    "variableName": "Variable Name",
+    "variableValue": "Variable Value",
     "triggerMode": "Trigger Mode",
     "fileRedirections": "File Redirections",
     "standardInput": "Standard Input",
@@ -93,7 +98,8 @@
   },
   "status": {
     "loading": "Loading tasks...",
-    "noArguments": "No arguments yet"
+    "noArguments": "No arguments yet",
+    "noEnvironmentVariables": "No environment variables set"
   },
   "validation": {
     "required": "Required Fields",

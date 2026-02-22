@@ -31,6 +31,8 @@ pub struct Model {
     pub no_console: bool,
     #[sea_orm(column_type = "Text", nullable)]
     pub working_dir: Option<String>,
+    #[sea_orm(column_type = "Text")]
+    pub env_vars: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

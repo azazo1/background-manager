@@ -41,6 +41,23 @@ const getProgramBaseName = (programPath: string) => {
   return normalized.split("/").pop() || "";
 };
 
+// 将环境变量字典转换为列表格式
+const envVarsToList = (envVars?: Record<string, string>): Array<{ key: string; value: string }> => {
+  if (!envVars) return [];
+  return Object.entries(envVars).map(([key, value]) => ({ key, value }));
+};
+
+// 将环境变量列表转换为字典
+const envVarsListToDict = (list: Array<{ key: string; value: string }>): Record<string, string> => {
+  const dict: Record<string, string> = {};
+  list.forEach(({ key, value }) => {
+    if (key.trim()) {
+      dict[key] = value;
+    }
+  });
+  return dict;
+};
+
 export function TaskEditDialog({
   open,
   task,
@@ -57,6 +74,7 @@ export function TaskEditDialog({
     trigger: { tag: "Manual" },
     enabled: true,
     no_console: false,
+    env_vars: {},
   });
 
   const [triggerType, setTriggerType] = useState<TriggerType>("Manual");
@@ -65,13 +83,16 @@ export function TaskEditDialog({
   const [browsingProgram, setBrowsingProgram] = useState(false);
   const [browsingWorkingDir, setBrowsingWorkingDir] = useState(false);
   const [isNameAuto, setIsNameAuto] = useState(true);
+  const [envVarsList, setEnvVarsList] = useState<Array<{ key: string; value: string }>>([]);
 
   useEffect(() => {
     if (task) {
       setFormData({
         ...task,
         working_dir: task.working_dir || "",
+        env_vars: task.env_vars || {},
       });
+      setEnvVarsList(envVarsToList(task.env_vars));
       setIsNameAuto(false);
       if (typeof task.trigger === "object" && "tag" in task.trigger) {
         setTriggerType(task.trigger.tag);
@@ -90,7 +111,9 @@ export function TaskEditDialog({
         trigger: { tag: "Manual" },
         no_console: false,
         enabled: true,
+        env_vars: {},
       });
+      setEnvVarsList([]);
       setTriggerType("Manual");
       setRoutineMs(5000);
       setInstantTime("");
@@ -208,6 +231,20 @@ export function TaskEditDialog({
     }));
   };
 
+  const handleEnvVarChange = (index: number, value: string) => {
+    const newList = [...envVarsList];
+    newList[index] = value;
+    setEnvVarsList(newList);
+  };
+
+  const handleAddEnvVar = () => {
+    setEnvVarsList((prev) => [...prev, { key: "", value: "" }]);
+  };
+
+  const handleRemoveEnvVar = (index: number) => {
+    setEnvVarsList((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSave = () => {
     if (!formData.program) {
       toast.error(t("validation.required"), {
@@ -218,10 +255,13 @@ export function TaskEditDialog({
     const trimmedName = formData.name.trim();
     const derivedName = trimmedName || getProgramBaseName(formData.program);
     const trimmedWorkingDir = formData.working_dir?.trim();
+    // 将环境变量列表转换为字典再保存
+    const envVarsDict = envVarsListToDict(envVarsList);
     onSave({
       ...formData,
       name: derivedName,
       working_dir: trimmedWorkingDir ? trimmedWorkingDir : undefined,
+      env_vars: envVarsDict,
     });
   };
 
@@ -349,6 +389,61 @@ export function TaskEditDialog({
               </div>
             ) : (
               <p className="text-sm text-slate-500">{t("status.noArguments")}</p>
+            )}
+          </div>
+
+          {/* Environment Variables */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>{t("form.environmentVariables")}</Label>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleAddEnvVar}
+                className="text-xs"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                {t("button.addVariable")}
+              </Button>
+            </div>
+            <p className="text-xs text-slate-500">{t("form.environmentVariablesNote")}</p>
+            {envVarsList.length > 0 ? (
+              <div className="space-y-2">
+                {envVarsList.map((item, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      placeholder={t("form.variableName")}
+                      value={item.key}
+                      onChange={(e) => {
+                        const newList = [...envVarsList];
+                        newList[index] = { ...item, key: e.target.value };
+                        setEnvVarsList(newList);
+                      }}
+                      className="flex-1 min-w-0"
+                    />
+                    <Input
+                      placeholder={t("form.variableValue")}
+                      value={item.value}
+                      onChange={(e) => {
+                        const newList = [...envVarsList];
+                        newList[index] = { ...item, value: e.target.value };
+                        setEnvVarsList(newList);
+                      }}
+                      className="flex-1 min-w-0"
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleRemoveEnvVar(index)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">{t("status.noEnvironmentVariables")}</p>
             )}
           </div>
 

@@ -18,6 +18,7 @@
     "stop": "停止",
     "browse": "浏览",
     "addArgument": "添加参数",
+    "addVariable": "添加变量",
     "retry": "重试",
     "settings": "设置"
   },
@@ -40,6 +41,11 @@
     "arguments": "参数列表",
     "argumentsNote": "包含空格的参数不会自动拆分",
     "argumentPlaceholder": "参数 {{number}}",
+    "environmentVariables": "环境变量",
+    "environmentVariablesNote": "为程序设置环境变量",
+    "variableName": "变量名",
+    "variableValue": "变量值",
+
     "triggerMode": "触发模式",
     "fileRedirections": "文件重定向",
     "standardInput": "标准输入",
@@ -93,7 +99,8 @@
   },
   "status": {
     "loading": "加载任务中...",
-    "noArguments": "暂无参数"
+    "noArguments": "暂无参数",
+    "noEnvironmentVariables": "暂无环境变量"
   },
   "validation": {
     "required": "必填字段",

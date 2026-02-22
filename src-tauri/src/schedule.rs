@@ -431,6 +431,8 @@ impl Scheduler {
             process::Command::new(&task.program)
         };
         cmd.args(&task.args);
+        // 设置环境变量
+        cmd.envs(&task.env_vars);
         if let Some(working_dir) = &task.working_dir {
             cmd.current_dir(working_dir);
         } else if let Some(parent) = task.program.parent() {

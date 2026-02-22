@@ -1,4 +1,4 @@
-use std::{path::PathBuf, time::Duration};
+use std::{collections::HashMap, path::PathBuf, time::Duration};
 
 use chrono::{DateTime, FixedOffset};
 use sea_orm::{
@@ -54,6 +54,9 @@ pub struct Task {
     /// 程序启动目录, 为空则自动使用程序所在的目录.
     #[builder(into)]
     pub working_dir: Option<PathBuf>,
+    /// 环境变量, 存储为 HashMap<String, String>
+    #[builder(default)]
+    pub env_vars: HashMap<String, String>,
 }
 
 impl From<entity::tasks::Model> for Task {
@@ -90,6 +93,8 @@ impl From<entity::tasks::Model> for Task {
             last_run_at: m.last_run_at.and_then(|s| serde_json::from_str(&s).ok()),
             no_console: m.no_console,
             working_dir: m.working_dir.map(PathBuf::from),
+            // 将 JSON 字符串解析回 HashMap<String, String>
+            env_vars: serde_json::from_str(&m.env_vars).unwrap_or_default(),
         }
     }
 }
@@ -125,6 +130,8 @@ impl From<Task> for entity::tasks::ActiveModel {
             last_run_at: NotSet,
             no_console: Set(t.no_console),
             working_dir: Set(t.working_dir.map(|p| p.to_string_lossy().into_owned())),
+            // 将 HashMap<String, String> 序列化为 JSON 字符串
+            env_vars: Set(serde_json::to_string(&t.env_vars).unwrap_or_else(|_| "{}".to_string())),
         }
     }
 }

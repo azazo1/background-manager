@@ -42,3 +42,6 @@ ALTER TABLE tasks ADD COLUMN no_console BOOLEAN NOT NULL DEFAULT 0;
 
 -- 添加 working_dir 列, 表示工作目录.
 ALTER TABLE tasks ADD COLUMN working_dir TEXT;
+
+-- 添加 env_vars 列, 存储环境变量的 JSON 字符串，例如: {"KEY": "value", "PORT": "8080"}
+ALTER TABLE tasks ADD COLUMN env_vars TEXT NOT NULL DEFAULT '{}';
