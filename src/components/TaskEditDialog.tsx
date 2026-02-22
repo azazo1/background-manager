@@ -231,12 +231,6 @@ export function TaskEditDialog({
     }));
   };
 
-  const handleEnvVarChange = (index: number, value: string) => {
-    const newList = [...envVarsList];
-    newList[index] = value;
-    setEnvVarsList(newList);
-  };
-
   const handleAddEnvVar = () => {
     setEnvVarsList((prev) => [...prev, { key: "", value: "" }]);
   };
