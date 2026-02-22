@@ -236,6 +236,7 @@ impl Scheduler {
         let id = task.id.unwrap();
         let mut child: Option<Child> = None;
         let mut suspension_detector = SuspensionDetector::new();
+        let mut instant_launched = false;
 
         // 初始化触发器
         let mut interval = None;
@@ -245,10 +246,10 @@ impl Scheduler {
                 interval = Some(tokio::time::interval(d));
             }
             Trigger::Startup => {
-                Self::run_and_record(&mut child, &db, &task).await;
+                Self::run_and_record(&mut child, &db, &task).await.ok();
             }
             Trigger::KeepAlive => {
-                Self::run_and_record(&mut child, &db, &task).await;
+                Self::run_and_record(&mut child, &db, &task).await.ok();
             }
             Trigger::Manual => (),
             Trigger::Instant(date_time) => {
@@ -262,7 +263,7 @@ impl Scheduler {
                 }
             }
             Trigger::UntilSucceed => {
-                Self::run_and_record(&mut child, &db, &task).await;
+                Self::run_and_record(&mut child, &db, &task).await.ok();
             }
         }
 
@@ -280,7 +281,7 @@ impl Scheduler {
                         },
                         GuardMsg::RunTaskManually => {
                             suspension_detector.reset();
-                            Self::run_and_record(&mut child, &db, &task).await;
+                            Self::run_and_record(&mut child, &db, &task).await.ok();
                         }
                         GuardMsg::SwitchTask(enabled) => {
                             suspension_detector.reset();
@@ -324,7 +325,7 @@ impl Scheduler {
                         None
                     }
                 } => {
-                    Self::run_and_record(&mut child, &db, &task).await;
+                    Self::run_and_record(&mut child, &db, &task).await.ok();
                 }
 
                 // 指定时间触发 (Instant)
@@ -335,8 +336,10 @@ impl Scheduler {
                     } else {
                         None
                     }
-                } => {
-                    Self::run_and_record(&mut child, &db, &task).await;
+                }, if !instant_launched => {
+                    if Self::run_and_record(&mut child, &db, &task).await.is_ok() {
+                        instant_launched = true;
+                    }
                 }
 
                 // 监控进程退出 (KeepAlive/UntilSucceed 逻辑)
@@ -359,10 +362,10 @@ impl Scheduler {
                                 suspension_detector.fail();
                             }
                             if !suspension_detector.suspended() {
-                                Self::run_and_record(&mut child, &db, &task).await;
+                                Self::run_and_record(&mut child, &db, &task).await.ok();
                             }
                         } else if let Trigger::UntilSucceed = task.trigger && code != 0 {
-                            Self::run_and_record(&mut child, &db, &task).await;
+                            Self::run_and_record(&mut child, &db, &task).await.ok();
                         }
                     }
                 }
@@ -372,12 +375,19 @@ impl Scheduler {
     }
 
     /// 辅助函数：运行程序并更新数据库中的最后运行时间, 不会等待子进程结束.
-    async fn run_and_record(child: &mut Option<Child>, db: &DatabaseConnection, task: &Task) {
+    ///
+    /// # Returns
+    /// 是否执行, 执行成功则返回 Ok
+    async fn run_and_record(
+        child: &mut Option<Child>,
+        db: &DatabaseConnection,
+        task: &Task,
+    ) -> Result<(), ()> {
         if child.is_some() {
-            return;
+            return Err(());
         }
         if !task.enabled {
-            return;
+            return Err(());
         }
 
         let id = task.id.unwrap();
@@ -387,8 +397,14 @@ impl Scheduler {
             .ok();
         // 启动进程
         match Self::run_task(task.clone()).await {
-            Ok(new_child) => *child = Some(new_child),
-            Err(e) => warn!("failed to launch task: {e:?}"),
+            Ok(new_child) => {
+                *child = Some(new_child);
+                Ok(())
+            }
+            Err(e) => {
+                warn!("failed to launch task: {e:?}");
+                Err(())
+            }
         }
     }
 
