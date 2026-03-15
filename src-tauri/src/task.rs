@@ -2,7 +2,8 @@ use std::{collections::HashMap, path::PathBuf, time::Duration};
 
 use chrono::{DateTime, FixedOffset};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue::Unchanged, DatabaseConnection, EntityTrait, NotSet, Set,
+    ActiveModelTrait, ActiveValue::Unchanged, DatabaseConnection, EntityTrait, NotSet, QueryOrder,
+    Set, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
 
@@ -29,6 +30,8 @@ pub enum Trigger {
 pub struct Task {
     /// Task id, 不能重复, 在数据库中自动递增.
     pub id: Option<i64>,
+    /// 用于任务排序, 数值越小越靠前.
+    pub sort_order: Option<i64>,
     #[builder(into)]
     pub name: String,
     #[builder(into)]
@@ -80,6 +83,7 @@ impl From<entity::tasks::Model> for Task {
 
         Task {
             id: Some(m.id),
+            sort_order: Some(m.sort_order),
             name: m.name,
             program: m.program.into(),
             // 将 JSON 字符串解析回 Vec<String>
@@ -116,6 +120,7 @@ impl From<Task> for entity::tasks::ActiveModel {
                 Some(id) => Set(id),
                 None => NotSet, // 数据库会自动递增生成 ID
             },
+            sort_order: NotSet,
             name: Set(t.name),
             program: Set(t.program.to_string_lossy().into_owned()),
             // 将 Vec<String> 序列化为 JSON 字符串
@@ -164,17 +169,24 @@ pub trait TaskDAO {
         id: i64,
         run_at: chrono::DateTime<FixedOffset>,
     ) -> crate::Result<()>;
+    /// 按给定顺序重排任务. 传入顺序中的第 1 个任务将排在最前面.
+    async fn reorder_tasks(&self, ordered_ids: Vec<i64>) -> crate::Result<()>;
 }
 
 impl TaskDAO for DatabaseConnection {
     async fn list_tasks(&self) -> crate::Result<Vec<Task>> {
-        let tasks = entity::tasks::Entity::find().all(self).await.map_err(|e| {
-            crate::Error::with_source(
-                crate::ErrorKind::Db,
-                "failed to list all tasks",
-                Box::new(e),
-            )
-        })?;
+        let tasks = entity::tasks::Entity::find()
+            .order_by_asc(entity::tasks::Column::SortOrder)
+            .order_by_asc(entity::tasks::Column::Id)
+            .all(self)
+            .await
+            .map_err(|e| {
+                crate::Error::with_source(
+                    crate::ErrorKind::Db,
+                    "failed to list all tasks",
+                    Box::new(e),
+                )
+            })?;
         Ok(tasks.into_iter().map(|t| t.into()).collect())
     }
 
@@ -189,11 +201,27 @@ impl TaskDAO for DatabaseConnection {
     }
 
     async fn save_task(&self, task: Task) -> crate::Result<i64> {
+        let is_new_task = task.id.is_none();
         let am: entity::tasks::ActiveModel = task.into();
         let a = am.save(self).await.map_err(|e| {
             crate::Error::with_source(crate::ErrorKind::Db, "failed to insert task", Box::new(e))
         })?;
-        Ok(a.id.unwrap())
+        let id = a.id.unwrap();
+        if is_new_task {
+            let am = entity::tasks::ActiveModel {
+                id: Unchanged(id),
+                sort_order: Set(id),
+                ..Default::default()
+            };
+            am.update(self).await.map_err(|e| {
+                crate::Error::with_source(
+                    crate::ErrorKind::Db,
+                    "failed to initialize task sort order",
+                    Box::new(e),
+                )
+            })?;
+        }
+        Ok(id)
     }
 
     async fn remove_task(&self, id: i64) -> crate::Result<bool> {
@@ -263,6 +291,37 @@ impl TaskDAO for DatabaseConnection {
             crate::Error::with_source(
                 crate::ErrorKind::Db,
                 format!("failed to update run_at of task id: {id}"),
+                Box::new(e),
+            )
+        })?;
+        Ok(())
+    }
+
+    async fn reorder_tasks(&self, ordered_ids: Vec<i64>) -> crate::Result<()> {
+        self.transaction::<_, (), crate::Error>(|txn| {
+            Box::pin(async move {
+                for (index, id) in ordered_ids.into_iter().enumerate() {
+                    let am = entity::tasks::ActiveModel {
+                        id: Unchanged(id),
+                        sort_order: Set(index as i64),
+                        ..Default::default()
+                    };
+                    am.update(txn).await.map_err(|e| {
+                        crate::Error::with_source(
+                            crate::ErrorKind::Db,
+                            format!("failed to update task sort_order: {id}"),
+                            Box::new(e),
+                        )
+                    })?;
+                }
+                Ok(())
+            })
+        })
+        .await
+        .map_err(|e| {
+            crate::Error::with_source(
+                crate::ErrorKind::Db,
+                "failed to reorder tasks in transaction",
                 Box::new(e),
             )
         })?;

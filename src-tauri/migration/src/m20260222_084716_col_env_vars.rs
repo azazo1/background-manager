@@ -42,4 +42,3 @@ enum Tasks {
     Table,
     EnvVars,
 }
-

@@ -47,7 +47,8 @@ pub async fn run() {
             update_config,
             exit,
             stop_task,
-            pick_dir
+            pick_dir,
+            reorder_tasks
         ])
         .setup(|app| {
             tray::init_tray(app)?;

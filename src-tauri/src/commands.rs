@@ -164,3 +164,16 @@ pub(crate) async fn stop_task(app_state: State<'_, AppState>, id: i64) -> Result
         .await
         .map_err(|e| format!("{e}"))
 }
+
+#[tauri::command]
+pub(crate) async fn reorder_tasks(
+    app_state: State<'_, AppState>,
+    ordered_ids: Vec<i64>,
+) -> Result<(), String> {
+    app_state
+        .db()
+        .await
+        .reorder_tasks(ordered_ids)
+        .await
+        .map_err(|e| format!("{e}"))
+}

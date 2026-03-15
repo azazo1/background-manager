@@ -20,7 +20,8 @@
     "addArgument": "添加参数",
     "addVariable": "添加变量",
     "retry": "重试",
-    "settings": "设置"
+    "settings": "设置",
+    "reorder": "拖动排序"
   },
   "dialog": {
     "createTitle": "创建新任务",
@@ -120,6 +121,7 @@
     "toggleFailed": "更新任务失败",
     "refreshSuccess": "任务刷新成功",
     "refreshFailed": "刷新任务失败",
+    "reorderFailed": "调整任务顺序失败",
     "unknownError": "发生未知错误"
   }
 }

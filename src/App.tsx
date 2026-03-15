@@ -142,6 +142,30 @@ function App() {
     }
   };
 
+  const handleReorderTask = async (fromId: number, toId: number) => {
+    const fromIndex = tasks.findIndex((task) => task.id === fromId);
+    const toIndex = tasks.findIndex((task) => task.id === toId);
+    if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
+
+    const reordered = [...tasks];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+
+    setTasks(reordered);
+    const orderedIds = reordered
+      .map((task) => task.id)
+      .filter((id): id is number => id !== undefined);
+
+    try {
+      await taskApi.reorderTasks(orderedIds);
+      await fetchTasks();
+    } catch (err) {
+      console.error("Failed to reorder task:", err);
+      await fetchTasks();
+      toast.error(t("toast.reorderFailed"));
+    }
+  };
+
   const handleLanguageChange = (lng: string) => {
     i18n.changeLanguage(lng);
     localStorage.setItem("language", lng);
@@ -267,6 +291,7 @@ function App() {
             onRun={handleRunTask}
             onStop={handleStopTask}
             onToggleEnabled={handleToggleTask}
+            onReorder={handleReorderTask}
             isRunning={taskRunStatus}
             runnablePrograms={runnableProgramStatus}
             taskStatuses={taskStatusById}

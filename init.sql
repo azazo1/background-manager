@@ -45,3 +45,8 @@ ALTER TABLE tasks ADD COLUMN working_dir TEXT;
 
 -- 添加 env_vars 列, 存储环境变量的 JSON 字符串，例如: {"KEY": "value", "PORT": "8080"}
 ALTER TABLE tasks ADD COLUMN env_vars TEXT NOT NULL DEFAULT '{}';
+
+-- 添加 sort_order 列并按 id 初始化顺序
+ALTER TABLE tasks ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0;
+UPDATE tasks SET sort_order = id WHERE sort_order = 0;
+CREATE INDEX IF NOT EXISTS idx_tasks_sort_order ON tasks(sort_order);

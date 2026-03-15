@@ -35,6 +35,10 @@ export const taskApi = {
     return invoke("stop_task", { id });
   },
 
+  async reorderTasks(orderedIds: number[]): Promise<void> {
+    return invoke("reorder_tasks", { orderedIds });
+  },
+
   async reconnectDb(): Promise<void> {
     return invoke("reconnect_db");
   },

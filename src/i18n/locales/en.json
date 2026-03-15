@@ -20,7 +20,8 @@
     "addArgument": "Add Argument",
     "addVariable": "Add Variable",
     "retry": "Retry",
-    "settings": "Settings"
+    "settings": "Settings",
+    "reorder": "Drag to Reorder"
   },
   "dialog": {
     "createTitle": "Create New Task",
@@ -119,6 +120,7 @@
     "refreshSuccess": "Tasks refreshed successfully",
     "loadConfigFailed": "Failed to load application settings",
     "refreshFailed": "Failed to refresh tasks",
+    "reorderFailed": "Failed to reorder tasks",
     "unknownError": "Unknown error occurred"
   }
 }

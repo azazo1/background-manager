@@ -1,5 +1,6 @@
 export interface Task {
   id?: number;
+  sort_order?: number;
   name: string;
   program: string;
   working_dir?: string;
